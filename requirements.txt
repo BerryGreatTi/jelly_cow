@@ -1,3 +1,6 @@
 pandas
 yfinance
 google-adk
+pandas-ta
+TA-Lib
+pandas-datareader
