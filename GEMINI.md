@@ -2,7 +2,7 @@
 
 ## Tech Stack
 - Python 3.12
-- Agent Development Kit
+- Google Agent Development Kit
 
 ## Agent Architecture
 The project follows a hierarchical agent structure:

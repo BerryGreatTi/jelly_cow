@@ -1,5 +1,5 @@
-from adk.agent import Agent
-from adk.tools import import_agent_as_tool
+from google.adk.agents import Agent
+from google.adk.tools.agent_tool import AgentTool
 
 from . import tools
 
@@ -16,13 +16,13 @@ You have the following agents available as tools:
 Based on the user's request, determine the correct sequence of sub-agents to call to accomplish the goal.
 """
 
-agent = Agent(
+root_agent = Agent(
     name="investment_orchestrator",
-    instructions=INSTRUCTIONS,
+    instruction=INSTRUCTIONS,
     tools=[
-        import_agent_as_tool(tools.market_analyzer.agent),
-        import_agent_as_tool(tools.publisher.agent),
-        import_agent_as_tool(tools.qa_agent.agent),
-        import_agent_as_tool(tools.trading_agent.agent),
+        AgentTool(agent=tools.market_analyzer.agent.agent),
+        AgentTool(agent=tools.publisher.agent.agent),
+        AgentTool(agent=tools.qa_agent.agent.agent),
+        AgentTool(agent=tools.trading_agent.agent.agent),
     ],
 )

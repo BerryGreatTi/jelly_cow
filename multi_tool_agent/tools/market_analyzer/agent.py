@@ -1,5 +1,5 @@
-from adk.agent import Agent
-from adk.tools import import_agent_as_tool
+from google.adk.agents import Agent
+from google.adk.tools.agent_tool import AgentTool
 
 from . import sub_agents
 
@@ -17,10 +17,10 @@ Then, synthesize their findings into a single, well-structured final report.
 
 agent = Agent(
     name="market_analyzer",
-    instructions=INSTRUCTIONS,
+    instruction=INSTRUCTIONS,
     tools=[
-        import_agent_as_tool(sub_agents.fundamental_analyzer.agent),
-        import_agent_as_tool(sub_agents.technical_analyzer.agent),
-        import_agent_as_tool(sub_agents.news_analyzer.agent),
+        AgentTool(agent=sub_agents.fundamental_analyzer.agent),
+        AgentTool(agent=sub_agents.technical_analyzer.agent),
+        AgentTool(agent=sub_agents.news_analyzer.agent),
     ],
 )
