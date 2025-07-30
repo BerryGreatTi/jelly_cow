@@ -3,7 +3,7 @@ from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 from dotenv import load_dotenv
 
-from .tools import market_analyzer, publisher, qa_agent, trading_agent
+from .sub_agents import market_analyzer, publisher, qa_agent, trading_agent
 from .prompt import get_instruction
 
 
