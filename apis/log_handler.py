@@ -3,5 +3,5 @@ import logging
 
 
 loggers = [
-    "jm.app.agent_handler"
+    "jm.agent.handler"
 ]

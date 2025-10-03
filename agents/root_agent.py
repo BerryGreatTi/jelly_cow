@@ -7,7 +7,7 @@ from agents.news_analyzer import agent as news_analyzer
 
 
 agent = Agent(
-    name="JellyMonster",
+    name="JellyMonsterRootAgent",
     model="gemini-2.5-flash",
     
     description="A specialized agent for creating comprehensive investment reports by delegating to specialist analyzers.",

@@ -4,4 +4,6 @@ google-adk
 pandas-ta
 TA-Lib
 pandas-datareader
-slack_sdk
+slack_bolt
+fastapi
+uvicorn[standard]
