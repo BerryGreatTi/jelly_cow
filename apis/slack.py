@@ -1,5 +1,6 @@
 import asyncio
 import os
+import logging
 
 from slack_bolt.async_app import AsyncApp
 from apis.agent_handler import call_agent_async, get_session_service, get_runner
@@ -16,6 +17,7 @@ runner = get_runner(session_service)
 
 # Other settings
 max_text_length = 1000
+logger = logging.getLogger("jm.slack.handler")
 
 async def run_agent_and_respond(query, user_id, session_id, channel_id, thread_ts, client):
     await client.reactions_add(name="thinking_face", channel=channel_id, timestamp=thread_ts)
