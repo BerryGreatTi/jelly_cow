@@ -18,7 +18,7 @@ def get_session_service():
     logger.debug(f"$IS_AGENT_SESSION_DB={is_agent_session_db}, $AGENT_SESSION_DB_PATH='{db_path}'")
     
     if is_agent_session_db == 1:
-        os.mkdir(os.path.dirname(db_path), exist_ok=True)
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
         logger.info(f"Initializing database session service with '{db_path}'")
         return DatabaseSessionService(db_url=f"sqlite:///./{db_path}")
     

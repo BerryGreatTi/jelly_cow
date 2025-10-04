@@ -1,5 +1,9 @@
 from google.adk.agents import Agent
-
+from tools.fundamental import (
+    get_company_info,
+    get_financial_summary,
+    get_analyst_recommendations,
+)
 
 agent = Agent(
     name="FundamentalAnalyzer",
@@ -9,9 +13,12 @@ agent = Agent(
     
     instruction=(
 "You are a specialist in fundamental analysis. "
-"Analyze the given company's financial health, valuation, and competitive advantages. "
-"The tools for this are not yet implemented."
+"Use the available tools to analyze the given company's financial health, valuation, and competitive advantages."
     ),
     
-    tools=[] # Tools to be added later
+    tools=[
+        get_company_info,
+        get_financial_summary,
+        get_analyst_recommendations,
+    ]
 )

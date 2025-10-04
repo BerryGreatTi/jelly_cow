@@ -1,4 +1,6 @@
 from google.adk.agents import Agent
+from google.adk.tools.load_web_page import load_web_page
+from tools.news import get_company_news
 
 agent = Agent(
     name="NewsAnalyzer",
@@ -8,9 +10,13 @@ agent = Agent(
     
     instruction=(
 "You are a specialist in news and sentiment analysis. "
-"Find recent news, analyze market sentiment, and identify key issues related to the given asset. "
-"The tools for this are not yet implemented."
+"Your workflow is to first use the `get_company_news` tool to find recent articles for a given ticker. "
+"Then, use the `load_web_page` tool with the URLs from the news articles to read their full content. "
+"Finally, analyze the content to determine market sentiment and identify key issues related to the asset."
     ),
     
-    tools=[],
+    tools=[
+        get_company_news,
+        load_web_page,
+    ],
 )
