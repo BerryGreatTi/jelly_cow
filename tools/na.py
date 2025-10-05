@@ -18,10 +18,12 @@ def get_company_news(ticker: str) -> List[Dict[str, Any]]:
         # Return a curated list of dictionaries for easier processing
         return [
             {
-                "title": article.get("title"),
-                "publisher": article.get("publisher"),
-                "link": article.get("link"),
-                "providerPublishTime": article.get("providerPublishTime"),
+                "title": article.get("content").get("title"),
+                "publisher": article.get("content").get("provider").get("displayName"),
+                "link": article.get("content").get("link"),
+                "summary": article.get("content").get("summary"),
+                "publishTime": article.get("content").get("pubDate"),
+                "url": article.get("content").get("canonicalUrl").get("url"),
             }
             for article in news
         ]
