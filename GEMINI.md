@@ -10,22 +10,50 @@
 ## Agent Architecture
 The project follows a hierarchical agent structure orchestrated by a root agent.
 
-- `agents/root_agent.py`: The root orchestrator agent (`JellyMonsterRootAgent`). It receives a user's query from Slack, delegates analysis tasks to the appropriate sub-agents, and synthesizes their findings into a final report.
-- `agents/fundamental_analyzer.py`: A sub-agent specializing in fundamental analysis of a company's financial health.
-- `agents/technical_analyzer.py`: A sub-agent specializing in technical analysis of stock charts and indicators.
-- `agents/news_analyzer.py`: A sub-agent specializing in analyzing news and market sentiment.
+- `agents/root_agent.py`: The root orchestrator agent (`JellyMonsterRootAgent`). It receives a user's query from Slack and can perform two main tasks:
+    1.  **Single Asset Analysis**: Delegates analysis to sub-agents and synthesizes their findings into a report.
+    2.  **Portfolio Analysis**: Analyzes the user's current portfolio, including cash, and provides a holistic rebalancing plan.
 
-## Integrations
+- `agents/fundamental_analyzer.py`: A sub-agent that uses tools in `tools/fa.py` to analyze a company's profile, key financial metrics (P/E, P/B, debt-to-equity), and analyst recommendations.
+
+- `agents/technical_analyzer.py`: A sub-agent that uses tools in `tools/ta.py` to analyze a stock's performance based on key technical indicators like RSI, MACD, Bollinger Bands, OBV, and Stochastic Oscillator.
+
+- `agents/news_analyzer.py`: A sub-agent that uses tools in `tools/na.py` to fetch recent news articles and `load_web_page` to analyze their content for market sentiment and key issues.
+
+## Core Tools
+The sub-agents rely on a set of specialized tools to gather information. All tools are based on the `yfinance` library.
+
+- `tools/account.py`:
+    - `get_current_portfolio()`: Retrieves the user's mock portfolio, including stock holdings and cash balances in multiple currencies.
+
+- `tools/market.py`:
+    - `get_exchange_rate()`: Fetches the exchange rate between two currencies.
+    - `get_current_prices()`: Gets the current market price for a list of stocks and currencies, converting them to a single output currency.
+    - `evaluate_portfolio()`: Calculates the total value of the portfolio in a specified currency.
+
+- `tools/fa.py` (Fundamental Analysis):
+    - `get_company_info()`: Retrieves general company information (name, sector, summary).
+    - `get_financial_summary()`: Gets key financial ratios and metrics.
+    - `get_analyst_recommendations()`: Fetches the latest analyst recommendations.
+
+- `tools/ta.py` (Technical Analysis):
+    - `get_ohlcv()`: Fetches historical OHLCV data.
+    - `get_current_rsi()`, `get_current_macd()`, etc.: Calculate current values for various technical indicators.
+
+- `tools/na.py` (News Analysis):
+    - `get_company_news()`: Retrieves recent news articles for a given ticker.
+
+## Other APIs
 - **Slack**: The primary user interface. The bot listens for direct messages and mentions in channels, processes the request, and replies in a thread. This is handled by `app.py` (FastAPI) and `apis/slack.py` (Slack Bolt).
-- **Korea Investment API**: `apis/koreainvestment.py` contains a client for interacting with the Korea Investment & Securities API.
-- **Notion**: `apis/notion.py` is a placeholder for a future integration to publish reports to Notion.
+- **Korea Investment API**: `apis/koreainvestment.py` contains a client for the Korea Investment & Securities API. (Currently not used by the main agent logic).
+- **Notion**: `apis/notion.py` is a placeholder for a future integration to publish reports to Notion. (Currently not used).
 
 ## Development Guidelines
 
 ### Agent & Tool Design
 - **Docstrings**: All agents and tools should have clear, detailed English docstrings explaining their purpose, parameters, and returns for the LLM.
-- **Root Agent Role (`root_agent`)**: Acts as a planner and delegator. It receives a user query, creates a plan, and assigns tasks to sub-agents. It should not use tools directly, only other agents.
-- **Sub-agent Role**: Executor agents that perform specific analysis tasks using tools (e.g., data retrieval, calculation). Note: The tools for the analyzer agents are not yet implemented.
+- **Root Agent Role (`root_agent`)**: Acts as a planner and delegator. It receives a user query, creates a plan, and assigns tasks to sub-agents.
+- **Sub-agent Role**: Executor agents that perform specific analysis tasks using the provided tools.
 
 ### General
 - **Language**: English for all code, docstrings, and comments.
