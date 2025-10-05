@@ -1,6 +1,7 @@
 import pandas_ta as ta
 from pandas import DataFrame
 import yfinance as yf
+import pandas as pd
 
 
 def get_ohlcv(ticker: str, period: str = "1y") -> DataFrame:
@@ -14,7 +15,10 @@ def get_ohlcv(ticker: str, period: str = "1y") -> DataFrame:
     Returns:
         DataFrame: A pandas DataFrame containing the OHLCV data.
     """
-    return yf.download(ticker, period=period)
+    df = yf.download(ticker, period=period, auto_adjust=True)
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.droplevel(1)
+    return df
 
 
 def get_current_rsi(ticker: str, length: int = 14):

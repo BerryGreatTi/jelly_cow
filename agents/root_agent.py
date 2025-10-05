@@ -11,7 +11,7 @@ from tools.market import get_exchange_rate, evaluate_portfolio, get_current_pric
 
 agent = Agent(
     name="JellyMonsterRootAgent",
-    model="gemini-2.5-flash",
+    model="gemini-2.5-flash-lite",
     
     description="A specialized agent for creating comprehensive investment reports by delegating to specialist analyzers.",
     
@@ -27,13 +27,13 @@ agent = Agent(
 "First, call the specialist agents to gather insights. Then, synthesize their findings into a single, well-structured final report.\n"
 "\n"
 "**For Portfolio Analysis:**\n"
-"You can also analyze the user's current investment portfolio. Use the following tools for this purpose:\n"
-"- get_current_portfolio: To retrieve the user's current holdings of stocks and cash.\n"
-"- evaluate_portfolio: To calculate the total value of the portfolio in a specific currency (default is KRW).\n"
-"- get_current_prices: To get the current market price of stocks or currencies.\n"
-"- get_exchange_rate: To find the exchange rate between two currencies.\n"
-"\n"
-"When asked about the portfolio, first use `get_current_portfolio` to see the assets. Then, use `evaluate_portfolio` to report its total value. You can use `get_current_prices` to provide details on specific assets."
+"When asked to analyze the user's portfolio, your goal is to provide a holistic rebalancing plan, considering both the individual assets and the available cash.\n"
+"1. First, use `get_current_portfolio` to retrieve all of the user's holdings, including stocks and cash balances.\n"
+"2. Analyze the cash position. This is a critical constraint for your recommendations.\n"
+"3. For each stock asset in the portfolio, perform a comprehensive analysis by delegating to your specialist agents (`fundamental_analyzer`, `technical_analyzer`, `news_analyzer`).\n"
+"4. Synthesize the findings for all assets to form a cohesive view of the portfolio.\n"
+"5. Based on your analysis, create a rebalancing plan. For each asset, recommend whether to 'increase weight', 'decrease weight', or 'maintain weight'.\n"
+"6. **Crucially**, your recommendations must be actionable. If you recommend increasing the weight of an asset, you must first check if there is sufficient cash. If not, you must recommend which other asset(s) should be sold to fund the purchase. Your recommendations should be concrete (e.g., 'Sell 2 shares of AAPL and use the proceeds to buy 5 shares of GOOG')."
     ),
     
     tools=[

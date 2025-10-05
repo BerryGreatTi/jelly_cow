@@ -10,7 +10,7 @@ from tools.ta import (
 
 agent = Agent(
     name="TechnicalAnalyzer",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
 
     description="Specialist of stock technical analysis.",
     

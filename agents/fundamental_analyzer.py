@@ -1,5 +1,5 @@
 from google.adk.agents import Agent
-from tools.fundamental import (
+from tools.fa import (
     get_company_info,
     get_financial_summary,
     get_analyst_recommendations,

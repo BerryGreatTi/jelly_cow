@@ -1,10 +1,10 @@
 from google.adk.agents import Agent
 from google.adk.tools.load_web_page import load_web_page
-from tools.news import get_company_news
+from tools.na import get_company_news
 
 agent = Agent(
     name="NewsAnalyzer",
-    model="gemini-2.5-flash",
+    model="gemini-2.5-flash-lite",
     
     description="Specialist of news and sentiment analysis about economy, market, industry, sector and company.",
     
