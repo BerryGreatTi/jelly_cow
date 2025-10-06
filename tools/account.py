@@ -1,3 +1,9 @@
+import os
+from apis.koreainvestment import KoreaInvestmentAPI_mockup
+
+
+account = KoreaInvestmentAPI_mockup(os.environ.get('KIS_PROFILE_PATH'))
+
 def get_current_portfolio():
     """
     Retrieves the current investment portfolio, including stocks and cash balances.
@@ -10,15 +16,5 @@ def get_current_portfolio():
     """
     # This is a mock implementation.
     # In a real scenario, this would fetch data from a brokerage account.
-    return {
-        "stocks": {
-            "005930.KS": 4,  # Samsung Electronics
-            "000660.KS": 5,   # SK Hynix                                                                                                                                  │
-            "035420.KQ": 8,   # Naver    
-            "AAPL": 4,       # Apple
-        },
-        "cash": {
-            "KRW": 1_300_000,
-            "USD": 1_000,
-        }
-    }
+    return account.inquire_account_balance()['message']
+

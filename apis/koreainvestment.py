@@ -81,3 +81,46 @@ class KoreaInvestmentAPI:
             'status_code': res.status_code,
             'message': res.text,
         }
+    
+
+class KoreaInvestmentAPI_mockup:
+    def __init__(self, profile_path):
+        self.account = {
+            "stocks": {
+                "006800.KS": 34,  # 미래에셋증권
+                "LMT": 1,   # 록히드마틴                                                                                                                               │
+                "NVDA": 5,   # 엔비디아
+            },
+            "cash": {
+                "KRW": 12_421 + 9_982,
+                "USD": 162.90 + 630.52,
+            }
+        }
+    
+    def inquire_account_balance(self):
+        return {
+            'status_code': 200,
+            'message': self.account
+        }
+    
+    def is_access_token_valid(self):
+        return True
+    
+    def send_order(self, ticker, price, volume, currency):
+        cost = price * volume
+        if self.account['cash'][currency] < cost:
+            return {
+                'status_code': 204,
+                'message': 'Insufficient funds.',
+            }
+        
+        self.account['cash'][currency] -= cost
+        if self.account['stocks'].get(ticker):
+            self.account['stocks'][ticker] += volume
+        else:
+            self.account['stocks'][ticker] = volume
+        
+        return {
+            'status_code': 200,
+            'message': 'Order sent successfully.',
+        }
