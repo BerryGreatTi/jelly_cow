@@ -20,6 +20,18 @@ The project follows a hierarchical agent structure orchestrated by a root agent.
 
 - `agents/news_analyzer.py`: A sub-agent that uses tools in `tools/na.py` to fetch recent news articles and `load_web_page` to analyze their content for market sentiment and key issues.
 
+### Foundation Model Strategy
+The choice of foundation model for each agent is based on a balance of performance, cost, and speed for its specific task.
+
+- **`root_agent` (`JellyMonster`)**: `gemini-2.5-flash`
+  - **Reason**: As the orchestrator, this agent requires strong reasoning and synthesis capabilities to combine outputs from sub-agents into a coherent and detailed final report. `gemini-2.5-flash` provides a strong balance of high performance for this complex task while remaining efficient in terms of cost and latency.
+
+- **`news_analyzer`**: `gemini-2.5-flash`
+  - **Reason**: This agent needs to process unstructured text from web pages, which can be lengthy. `gemini-2.5-flash` is chosen for its strong natural language understanding and larger context window, ensuring it can analyze articles for sentiment and key issues effectively.
+
+- **`fundamental_analyzer` & `technical_analyzer`**: `gemini-2.5-flash`
+  - **Reason**: These agents interpret relatively structured data from their tools. `gemini-2.5-flash` has sufficient capability to interpret financial and technical indicators and provide meaningful analysis beyond simply reporting raw data.
+
 ## Core Tools
 The sub-agents rely on a set of specialized tools to gather information. All tools are based on the `yfinance` library.
 
