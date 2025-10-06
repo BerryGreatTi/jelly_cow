@@ -4,7 +4,7 @@ from tools.na import get_company_news
 
 agent = Agent(
     name="NewsAnalyzer",
-    model="gemini-2.5-flash-lite",
+    model="gemini-2.5-flash",
     
     description="Specialist of news and sentiment analysis about economy, market, industry, sector and company.",
     

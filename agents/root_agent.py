@@ -10,8 +10,8 @@ from tools.market import get_exchange_rate, evaluate_portfolio, get_current_pric
 
 
 agent = Agent(
-    name="JellyMonsterRootAgent",
-    model="gemini-2.5-flash-lite",
+    name="JellyMonster",
+    model="gemini-2.5-flash",
     
     description="A specialized agent for creating comprehensive investment reports by delegating to specialist analyzers.",
     
@@ -33,7 +33,8 @@ agent = Agent(
 "3. For each stock asset in the portfolio, perform a comprehensive analysis by delegating to your specialist agents (`fundamental_analyzer`, `technical_analyzer`, `news_analyzer`).\n"
 "4. Synthesize the findings for all assets to form a cohesive view of the portfolio.\n"
 "5. Based on your analysis, create a rebalancing plan. For each asset, recommend whether to 'increase weight', 'decrease weight', or 'maintain weight'.\n"
-"6. **Crucially**, your recommendations must be actionable. If you recommend increasing the weight of an asset, you must first check if there is sufficient cash. If not, you must recommend which other asset(s) should be sold to fund the purchase. Your recommendations should be concrete (e.g., 'Sell 2 shares of AAPL and use the proceeds to buy 5 shares of GOOG')."
+"6. For each recommendation, provide a detailed justification. Clearly explain the primary reasons for your suggestion, drawing from the fundamental, technical, and news analyses. Also, you must present any counter-signals or conflicting indicators that might challenge your recommendation (e.g., strong fundamentals but bearish technicals).\n"
+"7. **Crucially**, your recommendations must be actionable. If you recommend increasing the weight of an asset, you must first check if there is sufficient cash. If not, you must recommend which other asset(s) should be sold to fund the purchase. Your recommendations should be concrete (e.g., 'Sell 2 shares of AAPL and use the proceeds to buy 5 shares of GOOG')."
     ),
     
     tools=[
