@@ -13,7 +13,7 @@ APP_NAME = "JellyMonster"
 
 
 def get_session_service():
-    is_agent_session_db = os.environ.get("IS_AGENT_SESSION_DB", 0)
+    is_agent_session_db = int(os.environ.get("IS_AGENT_SESSION_DB", 0))
     db_path = os.environ.get("AGENT_SESSION_DB_PATH", "db/agent_session.db")
     logger.debug(f"$IS_AGENT_SESSION_DB={is_agent_session_db}, $AGENT_SESSION_DB_PATH='{db_path}'")
     
