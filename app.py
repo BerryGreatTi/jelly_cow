@@ -6,9 +6,9 @@ import uvicorn
 from fastapi import FastAPI, Request
 from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 
-from apis.slack import app as slack_app
 from apis.log_handler import initialize_loggers
 initialize_loggers()
+from apis.slack import app as slack_app
 
 # Initializes a FastAPI app
 api = FastAPI()

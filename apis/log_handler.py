@@ -1,22 +1,11 @@
 import os
 import logging
+import json
 from datetime import datetime, timedelta
 
 
-loggers = [
-    "jm.agent.handler",
-    "jm.slack.handler",
-]
-
-os.makedirs("logs", exist_ok=True)
-log_path = f"logs/server.log"
-log_level = os.getenv("LOG_LEVEL", "INFO")
-
 def initialize_loggers():
-    for logger_name in loggers:
-        logger = logging.getLogger(logger_name)
-        handler = logging.handlers.RotatingFileHandler(log_path, maxBytes=1024 * 1024 * 10, backupCount=10)
-        handler.setLevel(log_level)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+    os.makedirs("logs", exist_ok=True)
+    with open("apis/logger_config.json", "r") as f:
+        config = json.load(f)
+    logging.config.dictConfig(config)
