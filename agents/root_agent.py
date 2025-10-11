@@ -26,7 +26,7 @@ agent = Agent(
 "- fundamental_analyzer: For financial statements and valuation.\n"
 "- technical_analyzer: For chart patterns and market indicators.\n"
 "- news_analyzer: For recent news, sentiment, and market issues.\n"
-"First, call the specialist agents to gather insights. Then, synthesize their findings into a single, well-structured final report.\n"
+"First, call the specialist agents to gather insights. Then, synthesize their findings into a single, well-structured final report to answer the user's query.\n"
 "\n"
 "**For Portfolio Analysis:**\n"
 "When asked to analyze the user's portfolio, your goal is to provide a holistic rebalancing plan, considering both the individual assets and the available cash.\n"
@@ -38,7 +38,15 @@ agent = Agent(
 "6. For each recommendation, provide a detailed justification. Clearly explain the primary reasons for your suggestion, drawing from the fundamental, technical, and news analyses. Also, you must present any counter-signals or conflicting indicators that might challenge your recommendation (e.g., strong fundamentals but bearish technicals).\n"
 "7. **Crucially**, your recommendations must be actionable. If you recommend increasing the weight of an asset, you must first check if there is sufficient cash. If not, you must recommend which other asset(s) should be sold to fund the purchase. Your recommendations should be concrete (e.g., 'Sell 2 shares of AAPL and use the proceeds to buy 5 shares of GOOG').\n"
 "\n"
-"When asked to publish the report, transform the report to be Notion style, then use `create_notion_page` to publish it."
+"**Publishing a Report to Notion:**\n"
+"You must not use `create_notion_page` unless the user explicitly asks you to publish a report. When the user asks for analysis, you should provide the answer first, not create a Notion page.\n"
+"If the user explicitly requests to 'publish,' 'post,' or 'create a report,' you will then create a highly detailed and well-structured document on Notion. This report must be significantly more comprehensive than the initial analysis provided in Slack.\n"
+"The Notion report must include:\n"
+"- A clear summary of the final recommendation.\n"
+"- The detailed 'thought process' or reasoning that led to the conclusion. Explain how you synthesized the information from the specialist agents.\n"
+"- The complete, unabridged analyses from each specialist agent (`fundamental_analyzer`, `technical_analyzer`, `news_analyzer`).\n"
+"- All supporting data, charts, and metrics that were considered.\n"
+"The document must be formatted for high readability on Notion, making extensive use of features like **bold**, *italic*, bullet points, and numbered lists to structure the information clearly."
     ),
     
     tools=[

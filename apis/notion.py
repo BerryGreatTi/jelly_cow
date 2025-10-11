@@ -15,6 +15,7 @@ def get_notion_client():
 def create_notion_page(title: str, content: str):
     """
     Creates a new page in a Notion database with the given title and content.
+    Handles content that exceeds Notion's 100-block limit per request.
 
     Args:
         title (str): The title of the Notion page.
@@ -52,13 +53,24 @@ def create_notion_page(title: str, content: str):
                 }
             })
         elif line.strip(): # Non-empty line
-            blocks.append({
-                "object": "block",
-                "type": "paragraph",
-                "paragraph": {
-                    "rich_text": [{"type": "text", "text": {"content": line}}]
-                }
-            })
+            # Simple check for bullet points
+            if line.strip().startswith('- '):
+                text_content = line.strip().replace('- ', '', 1)
+                blocks.append({
+                    "object": "block",
+                    "type": "bulleted_list_item",
+                    "bulleted_list_item": {
+                        "rich_text": [{"type": "text", "text": {"content": text_content}}]
+                    }
+                })
+            else:
+                blocks.append({
+                    "object": "block",
+                    "type": "paragraph",
+                    "paragraph": {
+                        "rich_text": [{"type": "text", "text": {"content": line}}]
+                    }
+                })
 
     # Dynamically find the title property
     try:
@@ -72,8 +84,10 @@ def create_notion_page(title: str, content: str):
         if not title_property_name:
             raise ValueError("Could not find a 'title' property in the database.")
 
-        # Create the page in Notion
-        new_page = {
+        # Create the page in Notion with the first batch of blocks
+        page_children = blocks[:100]
+        
+        new_page_data = {
             "parent": {"database_id": database_id},
             "properties": {
                 title_property_name: {
@@ -87,11 +101,23 @@ def create_notion_page(title: str, content: str):
                     ]
                 }
             },
-            "children": blocks
+            "children": page_children
         }
-        response = notion.pages.create(**new_page)
-        print(f"Successfully created Notion page: {response.get('url')}")
-        return response
+        
+        created_page = notion.pages.create(**new_page_data)
+        page_id = created_page['id']
+        
+        # Append remaining blocks in chunks of 100
+        remaining_blocks = blocks[100:]
+        for i in range(0, len(remaining_blocks), 100):
+            chunk = remaining_blocks[i:i+100]
+            notion.blocks.children.append(
+                block_id=page_id,
+                children=chunk
+            )
+
+        print(f"Successfully created Notion page: {created_page.get('url')}")
+        return created_page
     except Exception as e:
         print(f"Error creating Notion page: {e}")
         raise
