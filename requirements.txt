@@ -7,3 +7,4 @@ pandas-datareader
 slack_bolt
 fastapi
 uvicorn[standard]
+notion-client
