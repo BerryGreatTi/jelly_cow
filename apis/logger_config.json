@@ -18,6 +18,8 @@
     },
     "loggers": {
         "jm.agent.handler": { "level": "DEBUG", "handlers": ["file"] },
-        "jm.slack.handler": { "level": "DEBUG", "handlers": ["file"] }
+        "jm.slack.handler": { "level": "DEBUG", "handlers": ["file"] },
+        "slack_bolt": { "level": "DEBUG", "handlers": ["file"] },
+        "slack_sdk": { "level": "DEBUG", "handlers": ["file"] }
     }
 }

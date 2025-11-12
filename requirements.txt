@@ -8,3 +8,5 @@ slack_bolt
 fastapi
 uvicorn[standard]
 notion-client
+dotenv
+aiohttp
