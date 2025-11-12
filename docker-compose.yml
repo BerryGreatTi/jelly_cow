@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  prod:
+    build: .
+    container_name: jelly_cow_prod
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  dev:
+    build: .
+    container_name: jelly_cow_dev
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    restart: unless-stopped

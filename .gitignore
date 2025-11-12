@@ -215,6 +215,3 @@ __marimo__/
 
 logs/
 profiles/
-
-# Docker
-docker-compose.yml
