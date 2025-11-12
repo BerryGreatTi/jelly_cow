@@ -136,6 +136,7 @@ celerybeat.pid
 
 # Environments
 .env
+*.env
 .envrc
 .venv
 env/
@@ -214,3 +215,6 @@ __marimo__/
 
 logs/
 profiles/
+
+# Docker
+docker-compose.yml

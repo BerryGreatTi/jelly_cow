@@ -6,6 +6,7 @@
 - FastAPI
 - Slack Bolt
 - Pandas, yfinance, pandas-ta for financial analysis
+- Docker
 
 ## Agent Architecture
 The project follows a hierarchical agent structure orchestrated by a root agent.
@@ -56,9 +57,45 @@ The sub-agents rely on a set of specialized tools to gather information. All too
     - `get_company_news()`: Retrieves recent news articles for a given ticker.
 
 ## Other APIs
-- **Slack**: The primary user interface. The bot listens for direct messages and mentions in channels, processes the request, and replies in a thread. This is handled by `app.py` (FastAPI) and `apis/slack.py` (Slack Bolt).
+- **Slack**: The primary user interface. The bot connects to Slack via **Socket Mode**, listening for direct messages and mentions. This is handled by `app.py` and `apis/slack.py` (Slack Bolt).
 - **Korea Investment API**: `apis/koreainvestment.py` contains a client for the Korea Investment & Securities API. (Currently not used by the main agent logic).
 - **Notion**: `apis/notion.py` is a placeholder for a future integration to publish reports to Notion. (Currently not used).
+
+## DevOps
+
+### Environment Management with Docker
+The project uses Docker and Docker Compose to manage `development` and `production` environments.
+
+- **`Dockerfile`**: Defines the Python 3.12 container for the application, installs dependencies from `requirements.txt`, and copies the application code.
+
+- **`docker-compose.yml`**: Defines two services:
+    - **`prod`**: Runs the application based on the code copied into the Docker image at build time. This is the stable, production environment.
+    - **`dev`**: Mounts the local source code directory into the container. This allows for live testing of code changes without rebuilding the image.
+
+### Development Workflow
+1.  **Start Development Environment**:
+    ```bash
+    docker-compose up dev -d
+    ```
+    (Code changes on the local machine are reflected instantly in the container.)
+
+2.  **Update and Deploy to Production**:
+    Once development is complete, build a new image and start the `prod` service.
+    ```bash
+    docker-compose up prod -d --build
+    ```
+
+3.  **Stop Services**:
+    ```bash
+    docker-compose down
+    ```
+
+4.  **View Logs**:
+    ```bash
+    docker-compose logs -f <service_name>
+    ```
+    (e.g., `docker-compose logs -f dev`)
+
 
 ## Development Guidelines
 
