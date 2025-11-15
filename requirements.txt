@@ -10,3 +10,4 @@ uvicorn[standard]
 notion-client
 dotenv
 aiohttp
+requests

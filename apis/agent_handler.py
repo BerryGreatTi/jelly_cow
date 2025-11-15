@@ -14,13 +14,15 @@ APP_NAME = "JellyMonster"
 
 def get_session_service():
     is_agent_session_db = bool(os.environ.get("IS_AGENT_SESSION_DB", 0))
-    db_path = "logs/agent_session.db"
+    db_path = os.environ.get("SESSION_DB_PATH", "agent_sessions.db")
     if not is_agent_session_db:
         db_path = ":memory:"
     logger.debug(f"$IS_AGENT_SESSION_DB={is_agent_session_db}, session_db='{db_path}'")
     
     if is_agent_session_db:
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        dirname = os.path.dirname(db_path)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
         logger.info(f"Initializing database session service with '{db_path}'")
         return DatabaseSessionService(db_url=f"sqlite:///./{db_path}")
     
@@ -35,7 +37,7 @@ def get_runner(session_service):
 
 async def call_agent_async(query: str, session_service, runner, user_id, session_id):
     """Sends a query to the agent and prints the final response."""
-    logger.debug(f"User Query: {query}")
+    logger.info(f"User Query: {query}")
 
     # 에이전트 세션 생성
     try: 
@@ -61,5 +63,5 @@ async def call_agent_async(query: str, session_service, runner, user_id, session
                 final_response_text = f"Agent escalated: {event.error_message or 'No specific message.'}"
             break
 
-    logger.debug(f"Agent Response: {final_response_text}")
+    logger.info(f"Agent Response: {final_response_text[:40]} (upto 40 characters)")
     return final_response_text
