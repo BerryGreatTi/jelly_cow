@@ -2,6 +2,7 @@ import asyncio
 import os
 import logging
 import json
+import traceback
 
 from slack_bolt.async_app import AsyncApp
 from apis.agent_handler import call_agent_async, get_session_service, get_runner
@@ -31,6 +32,7 @@ async def run_agent_and_respond(query, user_id, session_id, channel_id, ts, clie
             session_id=session_id,
         )
     except Exception as e:
+        logger.error(traceback.format_exc())
         response = f"An error occurred: {str(e)}"
     await client.reactions_remove(name="thinking_face", channel=channel_id, timestamp=ts)
 
