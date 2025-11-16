@@ -2,13 +2,9 @@ import os
 import notion_client
 from datetime import datetime
 
-notion_api_key = os.getenv("NOTION_API_KEY")
-database_id = os.getenv("NOTION_DATABASE_ID")
 
-def get_notion_client():
+def get_notion_client(notion_api_key):
     """Initializes and returns the Notion client using the API key from environment variables."""
-    if not notion_api_key:
-        raise ValueError("NOTION_API_KEY environment variable not set.")
     
     return notion_client.Client(auth=notion_api_key)
 
@@ -21,10 +17,16 @@ def create_notion_page(title: str, content: str):
         title (str): The title of the Notion page.
         content (str): The content of the Notion page in Markdown format.
     """
-    notion = get_notion_client()
+    notion_api_key = os.getenv("NOTION_API_KEY")
+    database_id = os.getenv("NOTION_DATABASE_ID")
+
+    if not notion_api_key:
+        raise ValueError("NOTION_API_KEY environment variable not set.")
     if not database_id:
         raise ValueError("NOTION_DATABASE_ID environment variable not set.")
 
+    notion = get_notion_client(notion_api_key)
+    
     # Convert Markdown content to Notion blocks
     blocks = []
     for line in content.split('\n'):
@@ -75,8 +77,10 @@ def create_notion_page(title: str, content: str):
     # Dynamically find the title property
     try:
         db_info = notion.databases.retrieve(database_id=database_id)
+        data_source_id = db_info['data_sources'][0]['id']
+        ds_info = notion.data_sources.retrieve(data_source_id=data_source_id)
         title_property_name = None
-        for name, prop in db_info['properties'].items():
+        for name, prop in ds_info['properties'].items():
             if prop['type'] == 'title':
                 title_property_name = name
                 break
