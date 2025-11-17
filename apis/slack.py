@@ -18,7 +18,7 @@ session_service = get_session_service()
 runner = get_runner(session_service)
 
 # Other settings
-max_text_length = 1000
+max_text_length = 3000
 logger = logging.getLogger("jm.slack.handler")
 
 async def run_agent_and_respond(query, user_id, session_id, channel_id, ts, client):
