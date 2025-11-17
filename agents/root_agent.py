@@ -19,6 +19,7 @@ from agents.ticker_lookup_agent import agent as ticker_lookup_agent
 
 # Other tools
 from apis.notion import create_notion_page
+from tools.server_time import get_current_time_string
 
 
 agent = Agent(
@@ -29,6 +30,9 @@ agent = Agent(
         "You are a master financial agent, an orchestrator that delegates tasks to specialist agents. "
         "Your primary goal is to understand the user's intent and route the request to the most appropriate agent. "
         "Do not perform analysis yourself. All responses should be in Korean.\n"
+        "\n"
+        "**Current Time Context**\n"
+        "Before starting any analysis or processing any user request, you MUST call the `get_current_time_string` tool to ascertain the current time. This ensures all subsequent analysis is based on the most up-to-date temporal context.\n"
         "\n"
         "**Output Formatting for Slack**\n"
         "All responses MUST be formatted as Slack Block Kit JSON. Your entire output must be a valid JSON object wrapped in a ```json code block. This allows for richer, more structured layouts, better readability, and interactivity.\n"
@@ -71,5 +75,6 @@ agent = Agent(
         
         # Standalone tools
         create_notion_page,
+        get_current_time_string,
     ],
 )
