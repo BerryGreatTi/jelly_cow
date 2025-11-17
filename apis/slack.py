@@ -3,7 +3,6 @@ import os
 import logging
 import json
 import traceback
-from datetime import datetime
 
 from slack_bolt.async_app import AsyncApp
 from apis.agent_handler import call_agent_async, get_session_service, get_runner
@@ -25,10 +24,8 @@ logger = logging.getLogger("jm.slack.handler")
 async def run_agent_and_respond(query, user_id, session_id, channel_id, ts, client):
     await client.reactions_add(name="thinking_face", channel=channel_id, timestamp=ts)
     try:
-        current_date = datetime.now().strftime("%Y-%m-%d")
-        modified_query = f"Today is {current_date}. {query}"
         response = await call_agent_async(
-            query=modified_query,
+            query=query,
             session_service=session_service,
             runner=runner,
             user_id=user_id,
