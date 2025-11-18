@@ -3,7 +3,8 @@
 ## Tech Stack
 - Python 3.12
 - Google Agent Development Kit (ADK)
-- Financial Modeling Prep (FMP) API for market data and screening
+- **yfinance**: Primary source for fundamental data (financial statements), technical indicators, company news, and historical price data.
+- **Financial Modeling Prep (FMP) API**: Secondary source used for stock screening (`run_screener_query`) and advanced technical indicators (`get_technical_indicator`).
 - FastAPI
 - Slack Bolt
 - Docker
@@ -13,6 +14,8 @@ The project follows a hierarchical, orchestrated agent structure. A `root_agent`
 
 ```
 [root_agent] (Orchestrator)
+    |
+    |--- (pre-processes) ---> [get_current_time_string]
     |
     |--- [TickerLookupAgent] (Utility: Name -> Ticker)
     |
@@ -29,65 +32,76 @@ The project follows a hierarchical, orchestrated agent structure. A `root_agent`
     L--- [single_asset_analyzer_agent] (Task: Comprehensive Analysis)
            |
            |--- [fundamental_analyzer]
+           |      |
+           |      |--- (pre-processes) ---> [get_current_time_string]
+           |      |
            |      L--- (delegates to) ---> [market_news_analyzer]
            |
            |--- [technical_analyzer]
+           |
            L--- [stock_news_analyzer]
+                  L--- (uses tools) ---> [get_company_news, load_web_page]
 ```
 
-- `agents/root_agent.py`: The root orchestrator agent (`JellyMonster`). Its sole responsibility is to understand the user's intent and delegate the task to the most appropriate specialist agent. It handles routing and pre-processing tasks like ticker lookups.
+- `agents/root_agent.py`: The root orchestrator agent (`JellyMonster`). Its sole responsibility is to understand the user's intent and delegate the task to the most appropriate specialist agent. It handles routing and pre-processing tasks like checking the current time with `get_current_time_string` and resolving company names to tickers via `TickerLookupAgent`. It formats all final outputs as Slack Block Kit JSON.
 
-- `agents/recommender_agent.py`: A high-level agent that handles stock recommendation workflows. It uses screener tools to find candidates, then calls the `single_asset_analyzer_agent` to perform in-depth analysis before making a final recommendation.
+- `agents/recommender_agent.py`: A high-level agent that handles stock recommendation workflows. It uses `run_screener_query` and `get_technical_indicator` to find candidates, then calls the `single_asset_analyzer_agent` to perform in-depth analysis before making a final recommendation.
 
-- `agents/portfolio_analyzer_agent.py`: A high-level agent dedicated to analyzing a user's investment portfolio. It retrieves the user's holdings and calls the `single_asset_analyzer_agent` for each asset to form a holistic rebalancing plan.
+- `agents/portfolio_analyzer_agent.py`: A high-level agent dedicated to analyzing a user's investment portfolio. It retrieves the user's holdings via `get_current_portfolio` and calls the `single_asset_analyzer_agent` for each asset to form a holistic rebalancing plan.
 
 - `agents/single_asset_analyzer_agent.py`: A mid-level agent that performs a comprehensive analysis of a single stock. It encapsulates the process of calling the three low-level analyzers (`fundamental`, `technical`, `stock_news`) and synthesizing their findings into one report. This is a reusable component called by `recommender_agent` and `portfolio_analyzer_agent`.
 
-- `agents/ticker_lookup_agent.py`: A utility agent responsible for converting a company name (in English or Korean) into a valid stock ticker. It uses a hybrid approach: first querying the FMP Symbol Search API, and falling back to `google_search` if needed.
+- `agents/ticker_lookup_agent.py`: A utility agent responsible for converting a company name (in English or Korean) into a valid `yfinance` stock ticker. It now exclusively uses `google_search` to find the company's primary exchange and combine the base symbol with the correct suffix (e.g., `.KS` for KOSPI, `.KQ` for KOSDAQ).
 
-- `agents/fundamental_analyzer.py`: A low-level specialist that performs deep fundamental analysis. It is equipped with tools to analyze a company's financial statements (income, balance sheet, cash flow), key metrics, analyst ratings, major shareholders, and insider transactions. It is instructed to analyze trends over time and can delegate to the `MarketNewsAnalyzer` for qualitative, market-based research.
+- `agents/fundamental_analyzer.py`: A low-level specialist that performs deep fundamental analysis. It first calls `get_current_time_string` to determine the current date. Based on the date, it analyzes both **annual and the most recent quarterly** financial statements (`income_statement`, `balance_sheet`, `cash_flow`) to ensure a timely analysis. It also analyzes key metrics, analyst ratings, and insider transactions. It can delegate to the `MarketNewsAnalyzer` for qualitative, market-based research.
 
-- `agents/technical_analyzer.py`: A low-level specialist for technical analysis of a stock's price and volume data.
+- `agents/technical_analyzer.py`: A low-level specialist for technical analysis of a stock's price and volume data using tools from `tools/ta.py`.
 
-- `agents/stock_news_analyzer.py`: A low-level specialist for stock-specific news analysis. It finds recent news articles for a ticker, reads their content, and analyzes them for sentiment and key events.
+- `agents/stock_news_analyzer.py`: A low-level specialist for stock-specific news analysis. It uses `get_company_news` to find recent articles and `load_web_page` to read their full content, analyzing them for sentiment and key events.
 
 - `agents/market_news_analyzer.py`: A low-level specialist for qualitative market research. It uses `google_search` to analyze the broader market context, including identifying peer companies for comparative analysis, researching industry trends, and assessing the impact of macroeconomic indicators.
 
 ### Foundation Model Strategy
-All agents now use `gemini-2.5-flash`, providing a strong balance of performance, cost, and reasoning capabilities for all tasks, from simple routing to complex analysis and synthesis. The one exception is the `MarketNewsAnalyzer`.
+All agents use `gemini-2.5-flash`, providing a strong balance of performance, cost, and reasoning capabilities for all tasks, from simple routing to complex analysis and synthesis.
 
 - **`root_agent`**: For smart routing and pre-processing.
 - **`recommender_agent` & `portfolio_analyzer_agent`**: For orchestrating complex, multi-step analysis workflows.
 - **`single_asset_analyzer_agent`**: For synthesizing reports from multiple sub-agents.
 - **`ticker_lookup_agent`**: For translating and parsing search results to find tickers.
-- **`fundamental_analyzer`, `technical_analyzer`, `stock_news_analyzer`**: For interpreting structured and unstructured data to provide insights.
-- **`market_news_analyzer`**: Uses `gemini-2.0-flash` as required by the `google_search` tool to perform web-based market research.
+- **`fundamental_analyzer`, `technical_analyzer`, `stock_news_analyzer`, `market_news_analyzer`**: For interpreting structured and unstructured data to provide insights.
 
 ## Core Tools
 The agents rely on a set of specialized tools to gather information.
 
+- **`tools/fa.py`**: Contains tools based on `yfinance` for fetching fundamental data. Used by `FundamentalAnalyzer`.
+    - Includes: `get_company_info`, `get_financial_summary`, `get_analyst_recommendations`, `get_major_shareholders`, `get_insider_transactions`.
+    - The financial statement tools (`get_income_statement`, `get_balance_sheet`, `get_cash_flow`) accept a `period` argument to fetch 'annual' or 'quarterly' data.
+
+- **`tools/ta.py`**: Contains tools based on `yfinance` and `pandas-ta` for technical analysis. Used by `TechnicalAnalyzer`.
+    - Includes: `get_rsi`, `get_macd`, `get_moving_average`, `get_bbands`, `get_obv`, `get_stoch`.
+
+- **`tools/na.py`**: Contains tools based on `yfinance` for fetching company-specific news articles. Used by `StockNewsAnalyzer`.
+    - Includes: `get_company_news`.
+
+- **`tools/screener.py`**: Contains tools that use the FMP API for screening and filtering stocks. Used by `RecommenderAgent`.
+    - `run_screener_query()`: Filters stocks based on a wide range of criteria (market cap, sector, etc.).
+    - `get_technical_indicator()`: Fetches specific technical indicator data (e.g., SMA, Standard Deviation).
+
+- **`tools/account.py`**:
+    - `get_current_portfolio()`: Retrieves the user's mock portfolio. Used by `PortfolioAnalyzerAgent`.
+
+- **`tools/server_time.py`**:
+    - `get_current_time_string()`: Returns the current server time. Used by `RootAgent` and `FundamentalAnalyzer` to provide temporal context for analysis.
+
 - **`tools/lookup.py`**:
-    - `fmp_symbol_search()`: Searches for a ticker using a company name via the FMP API. Used by `TickerLookupAgent`.
+    - `fmp_symbol_search()`: (Currently disabled) Previously used for ticker lookups but has been replaced by a `google_search`-based workflow in `TickerLookupAgent`.
 
-- **`tools/screener.py`**:
-    - `run_screener_query()`: Filters stocks based on a wide range of criteria (market cap, sector, etc.) using the FMP Screener API.
-    - `get_technical_indicator()`: Fetches specific technical indicator data (e.g., SMA, Standard Deviation) for a stock from the FMP API.
-
-- **`google.adk.tools.google_search`**: A built-in tool used by `MarketNewsAnalyzer` for market research and by `TickerLookupAgent` as a fallback.
-
-- `tools/account.py`:
-    - `get_current_portfolio()`: Retrieves the user's mock portfolio.
-
-- `tools/fa.py`: Contains tools based on `yfinance` for fetching fundamental data. Used by `FundamentalAnalyzer`.
-    - Includes: `get_company_info`, `get_financial_summary`, `get_analyst_recommendations`, `get_income_statement`, `get_balance_sheet`, `get_cash_flow`, `get_major_shareholders`, `get_insider_transactions`.
-
-- `tools/ta.py`: Contains tools for technical analysis.
-
-- `tools/na.py`: Contains tools for fetching company-specific news articles. Used by `StockNewsAnalyzer`.
+- **`google.adk.tools`**:
+    - `google_search`: A built-in tool used by `MarketNewsAnalyzer` for market research and by `TickerLookupAgent` for finding tickers.
+    - `load_web_page`: A built-in tool used by `StockNewsAnalyzer` to read the content of news articles from URLs.
 
 ## Other APIs
 - **Slack**: The primary user interface. The bot connects to Slack via **Socket Mode**, listening for direct messages and mentions.
-- **Financial Modeling Prep (FMP) API**: The primary source for market data, used for stock screening, symbol lookups, and fetching technical indicators.
 - **Notion**: The `create_notion_page` tool is available to the `root_agent` for publishing reports.
 
 ## DevOps
@@ -127,7 +141,7 @@ The project uses Docker and Docker Compose to manage `development` and `producti
 ### General
 - **Language**: English for all code, docstrings, and comments.
 
-## Future Work / Long-term Tasks
+## Long-term Researches
 - **DCF Modeling Agent**: Implement an advanced agent capable of performing Discounted Cash Flow (DCF) analysis. This would be a significant, research-level task involving:
     - Projecting a company's future cash flows based on historical data and growth assumptions.
     - Determining an appropriate discount rate (WACC).
