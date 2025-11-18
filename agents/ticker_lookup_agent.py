@@ -5,7 +5,7 @@ from google.adk.tools import google_search
 
 agent = Agent(
     name="TickerLookupAgent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description="A specialist agent that finds a stock ticker for a given company name.",
     instruction=(
         "You are a specialist agent that finds a stock ticker for a given company name. "

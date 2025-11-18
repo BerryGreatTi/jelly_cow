@@ -3,7 +3,7 @@ from google.adk.tools import google_search
 
 agent = Agent(
     name="MarketNewsAnalyzer",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     
     description="Provides analysis of market conditions, raw materials, and cost factors for a company's products and services.",
     

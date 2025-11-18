@@ -76,52 +76,67 @@ def get_analyst_recommendations(ticker: str) -> Any:
         return replace_nan_with_none(recommendations.tail(5).to_dict('records'))
     return "No analyst recommendations found."
 
-def get_income_statement(ticker: str) -> Any:
+def get_income_statement(ticker: str, period: str = 'annual') -> Any:
     """
     Retrieves the income statement for a given stock ticker.
 
     Args:
         ticker (str): The stock ticker symbol.
+        period (str): 'annual' or 'quarterly'. Defaults to 'annual'.
 
     Returns:
         Any: The income statement, usually a DataFrame.
     """
     stock = yf.Ticker(ticker)
-    income_stmt = stock.income_stmt
+    if period == 'quarterly':
+        income_stmt = stock.quarterly_income_stmt
+    else:
+        income_stmt = stock.income_stmt
+    
     if income_stmt is not None and not income_stmt.empty:
         income_stmt.columns = income_stmt.columns.astype(str)
         return replace_nan_with_none(income_stmt.to_dict())
     return "No income statement found."
 
-def get_balance_sheet(ticker: str) -> Any:
+def get_balance_sheet(ticker: str, period: str = 'annual') -> Any:
     """
     Retrieves the balance sheet for a given stock ticker.
 
     Args:
         ticker (str): The stock ticker symbol.
+        period (str): 'annual' or 'quarterly'. Defaults to 'annual'.
 
     Returns:
         Any: The balance sheet, usually a DataFrame.
     """
     stock = yf.Ticker(ticker)
-    balance_sheet = stock.balance_sheet
+    if period == 'quarterly':
+        balance_sheet = stock.quarterly_balance_sheet
+    else:
+        balance_sheet = stock.balance_sheet
+    
     if balance_sheet is not None and not balance_sheet.empty:
         balance_sheet.columns = balance_sheet.columns.astype(str)
         return replace_nan_with_none(balance_sheet.to_dict())
     return "No balance sheet found."
 
-def get_cash_flow(ticker: str) -> Any:
+def get_cash_flow(ticker: str, period: str = 'annual') -> Any:
     """
     Retrieves the cash flow statement for a given stock ticker.
 
     Args:
         ticker (str): The stock ticker symbol.
+        period (str): 'annual' or 'quarterly'. Defaults to 'annual'.
 
     Returns:
         Any: The cash flow statement, usually a DataFrame.
     """
     stock = yf.Ticker(ticker)
-    cash_flow = stock.cashflow
+    if period == 'quarterly':
+        cash_flow = stock.quarterly_cashflow
+    else:
+        cash_flow = stock.cashflow
+    
     if cash_flow is not None and not cash_flow.empty:
         cash_flow.columns = cash_flow.columns.astype(str)
         return replace_nan_with_none(cash_flow.to_dict())
