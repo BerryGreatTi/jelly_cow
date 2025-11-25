@@ -214,5 +214,5 @@ __marimo__/
 .vscode/
 
 logs/
-profiles/
+profiles/*.json
 *.db
