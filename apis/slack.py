@@ -102,7 +102,7 @@ async def handle_app_mentions(body, logger, client):
     ts = event.get("ts", "null")
     query = event.get("text", "")
 
-    session_id = f"{user_id}-{channel_id}-{thread_ts}"
+    session_id = f"{channel_id}-{thread_ts}"
 
     asyncio.create_task(run_agent_and_respond(
         query=query,
