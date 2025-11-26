@@ -215,4 +215,5 @@ __marimo__/
 
 logs/
 profiles/*.json
+!profiles/template.json
 *.db

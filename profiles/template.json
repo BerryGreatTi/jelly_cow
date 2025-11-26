@@ -2,5 +2,6 @@
     "appkey": "",
     "appsecret": "",
     "cano": "",
-    "acnt_prdt_cd": ""
+    "acnt_prdt_cd": "",
+    "is_test": true
 }
