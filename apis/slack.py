@@ -62,12 +62,20 @@ async def run_agent_and_respond(query, user_id, session_id, channel_id, ts, clie
     # Fallback text for notifications
     fallback_text = response.split('\n')[0] if isinstance(response, str) else "Agent response"
 
-    await client.chat_postMessage(
-        channel=channel_id,
-        thread_ts=ts,
-        text=fallback_text,
-        blocks=blocks
-    )
+    try:
+        await client.chat_postMessage(
+            channel=channel_id,
+            thread_ts=ts,
+            text=fallback_text,
+            blocks=blocks
+        )
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        await client.chat_postMessage(
+            channel=channel_id,
+            thread_ts=ts,
+            text=f"An error occurred: {str(e)}"
+        )
 
 @app.event("message")
 async def handle_message_events(body, logger, client):
