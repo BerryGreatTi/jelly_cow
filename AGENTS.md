@@ -88,7 +88,7 @@ The agents rely on a set of specialized tools to gather information.
     - `get_technical_indicator()`: Fetches specific technical indicator data (e.g., SMA, Standard Deviation).
 
 - **`tools/account.py`**:
-    - `get_current_portfolio()`: Retrieves the user's mock portfolio. Used by `PortfolioAnalyzerAgent`.
+    - `get_current_portfolio()`: Retrieves the user's current investment portfolio from the Korea Investment API, including domestic and overseas stocks, and cash balances. Used by `PortfolioAnalyzerAgent`.
 
 - **`tools/server_time.py`**:
     - `get_current_time_string()`: Returns the current server time. Used by `RootAgent` and `FundamentalAnalyzer` to provide temporal context for analysis.
@@ -137,6 +137,11 @@ The project uses Docker and Docker Compose to manage `development` and `producti
 - **`root_agent` Role**: Acts as a smart orchestrator/router. It understands user intent and delegates to the most appropriate specialist agent. It should not perform complex analysis itself.
 - **Specialist Agent Role**: High-level agents (`Recommender`, `PortfolioAnalyzer`) define complex workflows, while low-level agents perform specific, granular tasks.
 - **Modularity**: Common, repeated tasks (like single-asset analysis or ticker lookup) should be encapsulated into their own reusable agents.
+
+### Interactive Q&A
+To improve user interaction, all specialist agents are instructed to handle follow-up questions regarding concepts they introduce in their analysis. If a user asks for clarification on a technical analysis term (e.g., "What is RSI?") or a company-specific technology (e.g., "What is CUDA?"), the agent that mentioned it will provide a concise definition and explain its relevance to the analysis. This allows for a more interactive and educational experience.
+
+For standalone questions about market concepts or technologies not directly tied to an ongoing analysis, the `root_agent` will delegate the query to the `MarketNewsAnalyzer`, which will use its web search capabilities to provide an answer.
 
 ### General
 - **Language**: English for all code, docstrings, and comments.

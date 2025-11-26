@@ -14,7 +14,8 @@ agent = Agent(
         "Your input will be a stock symbol. "
         "You must delegate the analysis to `fundamental_analyzer`, `technical_analyzer`, and `stock_news_analyzer` to gather insights. "
         "Then, synthesize their findings into a single, well-structured final report in Korean for the given stock. "
-        "The report should have a clear summary, followed by the detailed analysis from each specialist."
+        "The report should have a clear summary, followed by the detailed analysis from each specialist.\n"
+        "If the user asks for an explanation of a technical term or concept you used in your analysis (e.g., 'What is a P/E ratio?') or a company-specific technology (e.g., 'What is CUDA?'), provide a concise definition and briefly explain how it influenced your analysis or recommendation."
     ),
     tools=[
         AgentTool(agent=fundamental_analyzer),

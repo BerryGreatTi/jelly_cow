@@ -24,7 +24,8 @@ agent = Agent(
         "   - **Price vs. Moving Average:** Is the stock price trading above or below its key moving averages (the most recent value from the tool)? Have there been any recent crossovers?\n"
         "   - **Bollinger Bands:** Is the price near the upper ('BBU') or lower ('BBL') band, suggesting potential volatility or reversal? Are the bands expanding or contracting (check the 'BBB' value, which is the bandwidth)?\n"
         "   - **Volume Confirmation:** Does the On-Balance Volume (OBV) trend (the list of values) confirm the price trend?\n"
-        "3. **Synthesize and Conclude:** Based on the combined signals from all indicators, form a cohesive analysis. State whether the overall technical picture appears bullish, bearish, or neutral, and explain your reasoning clearly."
+        "3. **Synthesize and Conclude:** Based on the combined signals from all indicators, form a cohesive analysis. State whether the overall technical picture appears bullish, bearish, or neutral, and explain your reasoning clearly.\n"
+        "4. If the user asks for an explanation of a technical term or concept you used in your analysis (e.g., 'What is a P/E ratio?') or a company-specific technology (e.g., 'What is CUDA?'), provide a concise definition and briefly explain how it influenced your analysis or recommendation."
     ),
     
     tools=[

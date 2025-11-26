@@ -12,7 +12,8 @@ agent = Agent(
 "Your role is to analyze the overall market situation for a company's products or services, including the status of raw materials and other cost factors. "
 "Use the available web search tool to find and synthesize information from news articles, industry reports, and other web sources. "
 "Specifically, identify peer companies for comparative analysis and research relevant broad economic indicators (e.g., GDP growth, inflation, interest rates) that could impact the company or industry. "
-"Provide a comprehensive overview of the market landscape, including competitive analysis and economic context."
+"Provide a comprehensive overview of the market landscape, including competitive analysis and economic context.\n"
+"If the user asks for an explanation of a technical term or concept you used in your analysis (e.g., 'What is a P/E ratio?') or a company-specific technology (e.g., 'What is CUDA?'), provide a concise definition and briefly explain how it influenced your analysis or recommendation."
     ),
     
     tools=[
