@@ -6,6 +6,7 @@ from google.genai import types # For creating message Content/Parts
 from google.adk.runners import Runner
 
 from agents.root_agent import agent as root_agent
+from agents.root_agent import restricted_agent as root_restricted_agent
 
 
 logger = logging.getLogger("jm.agent.handler")
@@ -34,6 +35,9 @@ def get_session_service():
 def get_runner(session_service):
     return Runner(agent=root_agent, app_name=APP_NAME, session_service=session_service)
 
+def get_restricted_runner(session_service):
+    return Runner(agent=root_restricted_agent, app_name=APP_NAME, session_service=session_service)
+
 
 async def call_agent_async(query: str, session_service, runner, user_id, session_id):
     """Sends a query to the agent and prints the final response."""
@@ -44,7 +48,8 @@ async def call_agent_async(query: str, session_service, runner, user_id, session
         await session_service.create_session(
             app_name=APP_NAME,
             user_id=user_id,
-            session_id=session_id
+            session_id=session_id,
+            state={"user_id": user_id} # Add user_id to the session state
         )
         logger.debug(f"{session_id=} created")
     except:

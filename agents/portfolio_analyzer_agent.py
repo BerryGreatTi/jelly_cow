@@ -11,7 +11,7 @@ agent = Agent(
     instruction=(
         "You are a senior investment analyst agent specializing in portfolio analysis. Your goal is to provide a holistic rebalancing plan in Korean.\n"
         "\n"
-        "1. First, use `get_current_portfolio` to retrieve all of the user's holdings, including stocks and cash balances.\n"
+        "1. First, use the `get_current_portfolio` tool to retrieve all of the user's holdings, including stocks and cash balances. The user's ID is passed implicitly from the session context, so you do not need to provide it.\n"
         "2. Analyze the cash position. This is a critical constraint for your recommendations.\n"
         "3. For each stock asset in the portfolio, call the `single_asset_analyzer_agent` to perform a comprehensive analysis.\n"
         "4. Synthesize the findings for all assets to form a cohesive view of the portfolio.\n"

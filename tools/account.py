@@ -1,19 +1,38 @@
 import os
 import json
+import logging
 from apis.koreainvestment import KoreaInvestmentAPI
+from apis.user_api_manager import user_api_handler # Import the global instance
+from google.adk.tools.tool_context import ToolContext
 
-account = KoreaInvestmentAPI(os.environ.get('KIS_PROFILE_PATH'))
+logger = logging.getLogger("jm.tools.account")
 
-def get_current_portfolio():
+def get_current_portfolio(tool_context: ToolContext):
     """
-    Retrieves the current investment portfolio, including stocks and cash balances,
+    Retrieves the current investment portfolio for a specific user, including stocks and cash balances,
     by consolidating information from domestic, overseas, and general account balance APIs.
+
+    Args:
+        user_id (str): The Slack user ID used to locate the user's profile JSON file.
 
     Returns:
         dict: A dictionary representing the consolidated portfolio. The dictionary has keys
               'domestic_stocks', 'overseas_stocks', 'cash', and 'summary'. Returns an
-              error message dictionary if any of the API calls fail.
+              error message dictionary if the user profile is not found or any API calls fail.
     """
+    user_id = tool_context.state.get("user_id")
+    # Retrieve the user-specific API instance from the handler
+    account = user_api_handler.get_api_for_user(user_id)
+    
+    if account is None:
+        return {
+            "status_code": 404,
+            "message": (
+                f"Your profile could not be found. Please ask the administrator to create a profile for you at `profiles/{user_id}.json`. "
+                "You can use `profiles/template.json` as a starting point."
+            )
+        }
+    
     portfolio = {
         "domestic_stocks": [],
         "overseas_stocks": [],

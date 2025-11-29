@@ -19,15 +19,9 @@ The project follows a hierarchical, orchestrated agent structure. A `root_agent`
     |
     |--- [TickerLookupAgent] (Utility: Name -> Ticker)
     |
-    |--- [portfolio_analyzer_agent] (Workflow: Portfolio Analysis)
-    |      |
-    |      L--- (calls) ---> [single_asset_analyzer_agent]
+    |--- (delegates to specialist tools) ---> [portfolio_analyzer_agent], [recommender_agent], etc.
     |
-    |--- [recommender_agent] (Workflow: Stock Recommendation)
-    |      |
-    |      |--- (uses tools from) ---> tools/screener.py
-    |      |
-    |      L--- (calls) ---> [single_asset_analyzer_agent]
+    |--- (delegates final content to) ---> [FormatterAgent] (Sub-Agent for UI)
     |
     L--- [single_asset_analyzer_agent] (Task: Comprehensive Analysis)
            |
@@ -43,11 +37,16 @@ The project follows a hierarchical, orchestrated agent structure. A `root_agent`
                   L--- (uses tools) ---> [get_company_news, load_web_page]
 ```
 
-- `agents/root_agent.py`: The root orchestrator agent (`JellyMonster`). Its sole responsibility is to understand the user's intent and delegate the task to the most appropriate specialist agent. It handles routing and pre-processing tasks like checking the current time with `get_current_time_string` and resolving company names to tickers via `TickerLookupAgent`. It formats all final outputs as Slack Block Kit JSON.
+- `agents/root_agent.py`: The root orchestrator agent (`JellyMonster`). This file now defines two main agent instances:
+    - The **full-featured agent** (`agent`): Used in Direct Messages (DMs), it has access to all specialist tools, including those for personal account analysis.
+    - The **restricted agent** (`restricted_agent`): Used in public and private channels, it excludes tools that access sensitive personal account information (e.g., `portfolio_analyzer_agent`). Its instruction set also includes a notice informing users about these restrictions and directing them to DMs for sensitive requests.
+    Its responsibility is to understand the user's intent, delegate tasks to specialist agents to gather information, synthesize the content into a markdown draft, and then delegate the final UI generation to its `FormatterAgent` sub-agent.
+
+- `agents/formatter_agent.py`: A specialist sub-agent whose sole purpose is to convert a raw markdown string into a well-structured and highly readable Slack Block Kit JSON. This promotes a separation of concerns between content generation and presentation. This file now defines two instances, `formatter_agent` and `formatter_agent_public`, to avoid validation errors when used by two different parent agents.
 
 - `agents/recommender_agent.py`: A high-level agent that handles stock recommendation workflows. It uses `run_screener_query` and `get_technical_indicator` to find candidates, then calls the `single_asset_analyzer_agent` to perform in-depth analysis before making a final recommendation.
 
-- `agents/portfolio_analyzer_agent.py`: A high-level agent dedicated to analyzing a user's investment portfolio. It retrieves the user's holdings via `get_current_portfolio` and calls the `single_asset_analyzer_agent` for each asset to form a holistic rebalancing plan.
+- `agents/portfolio_analyzer_agent.py`: A high-level agent dedicated to analyzing a user's investment portfolio. It calls the `get_current_portfolio` tool (which implicitly receives the user's context) and then calls the `single_asset_analyzer_agent` for each asset to form a holistic rebalancing plan.
 
 - `agents/single_asset_analyzer_agent.py`: A mid-level agent that performs a comprehensive analysis of a single stock. It encapsulates the process of calling the three low-level analyzers (`fundamental`, `technical`, `stock_news`) and synthesizing their findings into one report. This is a reusable component called by `recommender_agent` and `portfolio_analyzer_agent`.
 
@@ -62,13 +61,32 @@ The project follows a hierarchical, orchestrated agent structure. A `root_agent`
 - `agents/market_news_analyzer.py`: A low-level specialist for qualitative market research. It uses `google_search` to analyze the broader market context, including identifying peer companies for comparative analysis, researching industry trends, and assessing the impact of macroeconomic indicators.
 
 ### Foundation Model Strategy
-All agents use `gemini-2.5-flash`, providing a strong balance of performance, cost, and reasoning capabilities for all tasks, from simple routing to complex analysis and synthesis.
+All agents use `gemini-2.5-flash` by default, providing a strong balance of performance and cost.
 
-- **`root_agent`**: For smart routing and pre-processing.
+- **`root_agent`**: For smart routing, content synthesis, and delegation.
+- **`FormatterAgent`**: **(Recommended)** Should be upgraded to a high-performance model (e.g., latest Gemini flagship) to ensure maximum reliability and quality in generating complex UI (Slack Block Kit JSON).
 - **`recommender_agent` & `portfolio_analyzer_agent`**: For orchestrating complex, multi-step analysis workflows.
 - **`single_asset_analyzer_agent`**: For synthesizing reports from multiple sub-agents.
 - **`ticker_lookup_agent`**: For translating and parsing search results to find tickers.
 - **`fundamental_analyzer`, `technical_analyzer`, `stock_news_analyzer`, `market_news_analyzer`**: For interpreting structured and unstructured data to provide insights.
+
+### Output Generation and UI
+The system uses a robust, two-tiered approach to generate final outputs for Slack, ensuring both high quality and stability.
+
+1.  **Ideal Path: `FormatterAgent`**: The `root_agent` generates content as markdown and delegates it to the `FormatterAgent`. This specialist agent, ideally powered by a high-performance model, converts the markdown into a rich, readable Slack Block Kit JSON structure.
+
+2.  **Safety Net: Intelligent Adaptive Rendering**: The `apis/slack.py` handler acts as a safety net. If the agent layer fails to produce valid Block Kit JSON for any reason, this handler will not crash. Instead, it will treat the raw output as markdown and intelligently split it into paragraph-based sections, ensuring a readable, structured message is still delivered. This makes the entire system resilient to failures in the agent-based formatting step.
+
+## Multi-User Support & Context Passing
+
+To support multiple users with distinct API credentials for portfolio analysis, the system uses the ADK's session state to pass user context implicitly.
+
+- **`apis/slack.py`**: The `user_id` is retrieved from the incoming Slack event (`message` or `app_mention`).
+- **`apis/agent_handler.py`**: This `user_id` is injected into the session state when the session is created or retrieved, by calling `session_service.create_session(..., state={"user_id": user_id})`.
+- **`tools/account.py`**: The `get_current_portfolio` tool is designed to receive the `ToolContext` object from the ADK framework. It accesses the `user_id` via `tool_context.state.get("user_id")`.
+- **`apis/user_api_manager.py`**: A new `UserApiHandler` class in this file uses the retrieved `user_id` to load the correct user profile from `profiles/<user_id>.json`. Crucially, this handler also caches the initialized `KoreaInvestmentAPI` instance for each user, reusing it until its access token expires to prevent excessive token requests and potential rate-limiting.
+
+This architecture ensures that portfolio analysis is always performed for the correct user without needing the agent to explicitly handle the `user_id` in its prompts.
 
 ## Core Tools
 The agents rely on a set of specialized tools to gather information.
@@ -88,7 +106,7 @@ The agents rely on a set of specialized tools to gather information.
     - `get_technical_indicator()`: Fetches specific technical indicator data (e.g., SMA, Standard Deviation).
 
 - **`tools/account.py`**:
-    - `get_current_portfolio()`: Retrieves the user's current investment portfolio from the Korea Investment API, including domestic and overseas stocks, and cash balances. Used by `PortfolioAnalyzerAgent`.
+    - `get_current_portfolio()`: Retrieves the user's current investment portfolio. It automatically receives the user's context via the ADK's `ToolContext` and uses the `user_id` from the session state to load the correct profile and fetch the corresponding account data. Used by `PortfolioAnalyzerAgent`.
 
 - **`tools/server_time.py`**:
     - `get_current_time_string()`: Returns the current server time. Used by `RootAgent` and `FundamentalAnalyzer` to provide temporal context for analysis.
