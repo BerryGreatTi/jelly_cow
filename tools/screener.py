@@ -4,28 +4,29 @@ It requires an FMP_API_KEY in the environment variables.
 """
 import os
 import requests
+from typing import Optional
 
 API_KEY = os.environ.get("FMP_API_KEY")
 BASE_URL = "https://financialmodelingprep.com/api/v3"
 
 
 def run_screener_query(
-    market_cap_more_than: int = None,
-    market_cap_lower_than: int = None,
-    price_more_than: int = None,
-    price_lower_than: int = None,
-    beta_more_than: float = None,
-    beta_lower_than: float = None,
-    volume_more_than: int = None,
-    volume_lower_than: int = None,
-    dividend_more_than: float = None,
-    dividend_lower_than: float = None,
-    is_etf: bool = None,
+    market_cap_more_than: Optional[int] = None,
+    market_cap_lower_than: Optional[int] = None,
+    price_more_than: Optional[int] = None,
+    price_lower_than: Optional[int] = None,
+    beta_more_than: Optional[float] = None,
+    beta_lower_than: Optional[float] = None,
+    volume_more_than: Optional[int] = None,
+    volume_lower_than: Optional[int] = None,
+    dividend_more_than: Optional[float] = None,
+    dividend_lower_than: Optional[float] = None,
+    is_etf: Optional[bool] = None,
     is_actively_trading: bool = True,
-    sector: str = None,
-    industry: str = None,
+    sector: Optional[str] = None,
+    industry: Optional[str] = None,
     country: str = "US",
-    exchange: str = None,
+    exchange: Optional[str] = None,
     limit: int = 100,
 ) -> list[dict]:
     """
@@ -91,8 +92,8 @@ def get_technical_indicator(
     symbol: str,
     period: int,
     indicator_type: str,
-    from_date: str = None,
-    to_date: str = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
 ) -> list[dict]:
     """
     Fetches daily technical indicator data for a given stock symbol from the FMP API.
