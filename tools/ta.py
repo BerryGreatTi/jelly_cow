@@ -31,11 +31,17 @@ def get_rsi(ticker: str, length: int = 14, limit: int = 30):
         limit (int): The number of recent data points to return.
 
     Returns:
-        list[float]: A list of RSI values, ordered from oldest to newest.
+        list[dict]: A list of dictionaries containing the RSI value, ordered from oldest to newest.
     """
     df = get_ohlcv(ticker)
-    rsi = df.ta.rsi(length=length)
-    return rsi.tail(limit).tolist()
+    indicator_data = df.ta.rsi(length=length)
+    if isinstance(indicator_data, pd.DataFrame):
+        indicator_series = indicator_data[f"RSI_{length}"]
+    else:
+        indicator_series = indicator_data
+
+    rsi = indicator_series.to_frame("RSI")
+    return rsi.tail(limit).to_dict("records")
 
 
 def get_macd(ticker: str, fast: int = 12, slow: int = 26, signal: int = 9, limit: int = 30):
@@ -68,11 +74,19 @@ def get_moving_average(ticker: str, length: int = 20, limit: int = 30):
         limit (int): The number of recent data points to return.
 
     Returns:
-        list[float]: A list of SMA values, ordered from oldest to newest.
+        list[dict]: A list of dictionaries containing the SMA value, ordered from oldest to newest.
     """
     df = get_ohlcv(ticker)
-    sma = df.ta.sma(length=length)
-    return sma.tail(limit).tolist()
+    # df.ta.sma might return a DataFrame with SMAs for O,H,L,C,V
+    # We select the one for the close price, which is the default.
+    indicator_data = df.ta.sma(length=length)
+    if isinstance(indicator_data, pd.DataFrame):
+        indicator_series = indicator_data[f"SMA_{length}"]
+    else:  # It's already a series
+        indicator_series = indicator_data
+
+    sma = indicator_series.to_frame("SMA")
+    return sma.tail(limit).to_dict("records")
 
 
 def get_bbands(ticker: str, length: int = 20, std: int = 2, limit: int = 30):
@@ -103,11 +117,18 @@ def get_obv(ticker: str, limit: int = 30):
         limit (int): The number of recent data points to return.
 
     Returns:
-        list[float]: A list of OBV values, ordered from oldest to newest.
+        list[dict]: A list of dictionaries containing the OBV value, ordered from oldest to newest.
     """
     df = get_ohlcv(ticker)
-    obv = df.ta.obv()
-    return obv.tail(limit).tolist()
+    indicator_data = df.ta.obv()
+    if isinstance(indicator_data, pd.DataFrame):
+        # Default OBV column name in pandas-ta is just 'OBV'
+        indicator_series = indicator_data["OBV"]
+    else:
+        indicator_series = indicator_data
+
+    obv = indicator_series.to_frame("OBV")
+    return obv.tail(limit).to_dict("records")
 
 
 def get_stoch(ticker: str, k: int = 14, d: int = 3, smooth_k: int = 3, limit: int = 30):

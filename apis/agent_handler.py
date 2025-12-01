@@ -39,9 +39,11 @@ def get_restricted_runner(session_service):
     return Runner(agent=root_restricted_agent, app_name=APP_NAME, session_service=session_service)
 
 
-async def call_agent_async(query: str, session_service, runner, user_id, session_id):
+async def call_agent_async(query: str, session_service, runner, user_id, session_id, is_dm: bool):
     """Sends a query to the agent and prints the final response."""
     logger.info(f"User Query: {query}")
+
+    session_state = {"user_id": user_id} if is_dm else {}
 
     # 에이전트 세션 생성
     try: 
@@ -49,9 +51,9 @@ async def call_agent_async(query: str, session_service, runner, user_id, session
             app_name=APP_NAME,
             user_id=user_id,
             session_id=session_id,
-            state={"user_id": user_id} # Add user_id to the session state
+            state=session_state # Add user_id to the session state
         )
-        logger.debug(f"{session_id=} created")
+        logger.debug(f"{session_id=} created with {session_state=}")
     except:
         logger.debug(f"{session_id=} loaded")
 

@@ -1,12 +1,29 @@
-import os
 import logging
 import logging.config
-import json
-from datetime import datetime, timedelta
+
+LOGGING_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": True,
+    "formatters": {
+        "default": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        }
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "default",
+            "stream": "ext://sys.stdout"
+        }
+    },
+    "loggers": {
+        "jm.agent.handler": {"level": "DEBUG", "handlers": ["console"]},
+        "jm.slack.handler": {"level": "DEBUG", "handlers": ["console"]},
+    },
+}
 
 
 def initialize_loggers():
-    os.makedirs("logs", exist_ok=True)
-    with open("apis/logger_config.json", "r") as f:
-        config = json.load(f)
-    logging.config.dictConfig(config)
+    """Initializes the loggers from the config dictionary."""
+    logging.config.dictConfig(LOGGING_CONFIG)

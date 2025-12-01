@@ -59,7 +59,7 @@ def build_blocks_from_markdown(text: str, max_length: int = 3000) -> list:
     return blocks
 
 
-async def run_agent_and_respond(query, user_id, session_id, channel_id, ts, client, runner_to_use):
+async def run_agent_and_respond(query, user_id, session_id, channel_id, ts, client, runner_to_use, is_dm: bool):
     """
     Runs the agent and posts a nicely formatted response to Slack.
     
@@ -80,6 +80,7 @@ async def run_agent_and_respond(query, user_id, session_id, channel_id, ts, clie
             runner=runner_to_use, # Use the passed runner
             user_id=user_id,
             session_id=session_id,
+            is_dm=is_dm,
         )
     except Exception as e:
         logger.error(traceback.format_exc())
@@ -159,7 +160,8 @@ async def handle_message_events(body, logger, client):
             channel_id=channel_id,
             ts=ts,
             client=client,
-            runner_to_use=full_runner # Use the full runner for DMs
+            runner_to_use=full_runner, # Use the full runner for DMs
+            is_dm=True,
         ))
 
 @app.event("app_mention")
@@ -192,5 +194,6 @@ async def handle_app_mentions(body, logger, client):
         channel_id=channel_id,
         ts=ts,
         client=client,
-        runner_to_use=runner_to_use
+        runner_to_use=runner_to_use,
+        is_dm=False,
     ))
