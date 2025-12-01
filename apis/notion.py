@@ -2,13 +2,16 @@ import os
 import notion_client
 from datetime import datetime
 
+from google.adk.tools import ToolContext
+from apis.user_api_manager import user_notion_handler
+
 
 def get_notion_client(notion_api_key):
     """Initializes and returns the Notion client using the API key from environment variables."""
     
     return notion_client.Client(auth=notion_api_key)
 
-def create_notion_page(title: str, content: str):
+def create_notion_page(title: str, content: str, tool_context: ToolContext):
     """
     Creates a new page in a Notion database with the given title and content.
     Handles content that exceeds Notion's 100-block limit per request.
@@ -16,14 +19,18 @@ def create_notion_page(title: str, content: str):
     Args:
         title (str): The title of the Notion page.
         content (str): The content of the Notion page in Markdown format.
+        tool_context (ToolContext): The tool context, used to get user-specific configuration.
     """
-    notion_api_key = os.getenv("NOTION_API_KEY")
-    database_id = os.getenv("NOTION_DATABASE_ID")
+    user_id = tool_context.state.get("user_id")
 
-    if not notion_api_key:
-        raise ValueError("NOTION_API_KEY environment variable not set.")
-    if not database_id:
-        raise ValueError("NOTION_DATABASE_ID environment variable not set.")
+    if user_id:
+        notion_api_key, database_id = user_notion_handler.get_notion_config_for_user(user_id)
+        if not notion_api_key:
+            raise ValueError(f"Could not find Notion configuration for user {user_id}.")
+    else:
+        notion_api_key, database_id = user_notion_handler.get_public_notion_config()
+        if not notion_api_key:
+            raise ValueError("Public Notion configuration (NOTION_API_KEY, NOTION_DATABASE_ID) not set.")
 
     notion = get_notion_client(notion_api_key)
     

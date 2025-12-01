@@ -3,5 +3,7 @@
     "appsecret": "",
     "cano": "",
     "acnt_prdt_cd": "",
-    "is_test": true
+    "is_test": true,
+    "notion_api_key": "",
+    "notion_database_id": ""
 }
