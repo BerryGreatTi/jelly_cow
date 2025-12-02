@@ -60,6 +60,8 @@ The project follows a hierarchical, orchestrated agent structure. A `root_agent`
 
 - `agents/market_news_analyzer.py`: A low-level specialist for qualitative market research. It uses `google_search` to analyze the broader market context, including identifying peer companies for comparative analysis, researching industry trends, and assessing the impact of macroeconomic indicators.
 
+- `agents/financial_model_agent.py`: A specialized agent that uses the "Financial Calculation Framework" to perform calculations based on financial theories. Its instructions mandate a sanity check of inputs before calculation and a critical evaluation of the results afterward, including performing a scenario analysis if the output seems unreasonable.
+
 ### Foundation Model Strategy
 All agents use `gemini-2.5-flash` by default, providing a strong balance of performance and cost.
 
@@ -117,6 +119,87 @@ The agents rely on a set of specialized tools to gather information.
 - **`google.adk.tools`**:
     - `google_search`: A built-in tool used by `MarketNewsAnalyzer` for market research and by `TickerLookupAgent` for finding tickers.
     - `load_web_page`: A built-in tool used by `StockNewsAnalyzer` to read the content of news articles from URLs.
+
+## Financial Calculation Framework
+
+To support complex, theory-based financial calculations (e.g., Implied Growth, DCF valuation) in a scalable and maintainable way, the project uses a "Theory-Based Calculation Framework". This framework separates data-fetching, calculation logic, and agent orchestration into distinct components.
+
+### Core Principles
+
+-   **Separation of Concerns**:
+    -   **Tools (`tools/`)**: Responsible only for fetching raw data (e.g., stock prices from `yfinance`, market data from the web). They contain no calculation logic.
+    -   **Models (`models/`)**: Contain the pure calculation logic based on specific financial theories (e.g., CAPM, GGM). They take data as input and produce a calculated value as output.
+    -   **Agents (`agents/`)**: Act as orchestrators. They decide which models to use, gather the necessary data by calling tools, and chain calculations together to reach a final conclusion.
+
+-   **Single Source of Truth (SSOT)**: All information about a financial model (its name, description, and required inputs) is defined within the model's class file itself. This prevents data duplication and ensures maintainability.
+
+-   **Dynamic Discovery**: Agents are not hard-coded with knowledge of every financial model. Instead, they use an `inspector` tool at runtime to discover available models, their purposes, and their data requirements.
+
+### Framework Components
+
+The framework is implemented through a new `models/` directory and two new specialized tools.
+
+**1. Directory Structure (`models/`)**
+
+A new top-level `models` directory houses the calculation logic, organized by financial concept. The following is an example structure:
+
+```
+models/
+├── schemas.py              # Pydantic schemas for metadata
+├── cost_of_equity/         # 'Cost of Equity' calculation models
+│   ├── __init__.py         # Intelligent registry for this concept
+│   ├── capm.py             # Example: CAPM model implementation
+│   └── ...
+└── implied_growth/         # 'Implied Growth' calculation models
+    ├── __init__.py
+    ├── ggm.py              # Example: Gordon Growth Model implementation
+    └── ...
+```
+
+**2. Pydantic Schemas (`models/schemas.py`)**
+
+To ensure consistency and data validity, a Pydantic model (`ModelMetadata`) defines the structure for all model metadata.
+
+**3. Model Classes (`capm.py`, `ggm.py`, etc.)**
+
+-   Each class represents a specific financial model.
+-   It contains the actual `calculate()` method (as an instance method).
+-   Crucially, it has a `@classmethod get_metadata()` that returns a `ModelMetadata` Pydantic object, fully describing itself. This class is the **Single Source of Truth** for its own metadata.
+
+**4. Intelligent Registries (`__init__.py`)**
+
+-   Each concept subdirectory's `__init__.py` file acts as a smart registry.
+-   At application start-up (on first import), it imports its child model classes, calls their `get_metadata()` classmethod, and builds a `MODELS_METADATA` dictionary.
+-   This provides a pre-built, cached map of all models available for that concept.
+
+**5. Inspector Tool (`tools/model_inspector.py`)**
+
+-   This new tool acts as the agent's guide to the `models` framework.
+-   It provides functions like `list_available_models(concept)` and `get_model_details(model_name)`.
+-   Internally, it simply reads the pre-built `MODELS_METADATA` dictionaries from the various `__init__.py` files, making it very fast and efficient.
+
+**6. Calculator Tool (`tools/calculator.py`)**
+
+-   This tool is the execution engine. It receives a model name and a dictionary containing the required input data.
+-   It dynamically finds the model class, instantiates it, and calls its `calculate()` method with the provided data, returning the result.
+
+### Agent Workflow Example
+
+The following is a conceptual example of how an agent would use this framework to dynamically plan and execute a calculation.
+
+1.  **Goal**: Agent needs to calculate "Implied Growth" using the "Gordon Growth Model".
+2.  **Discovery (Step 1)**: Agent calls `model_inspector.get_model_details('GordonGrowthModel')`.
+3.  **Analysis (Step 1)**: It discovers that GGM requires an input named `r` which is of type `concept:cost_of_equity`.
+4.  **Discovery (Step 2)**: Agent then calls `model_inspector.list_available_models(concept='cost_of_equity')`.
+5.  **Analysis (Step 2)**: It receives a list of available models, e.g., `['CAPM', 'FamaFrench']`. It decides to use `CAPM`.
+6.  **Discovery (Step 3)**: Agent calls `model_inspector.get_model_details('CAPM')`.
+7.  **Analysis (Step 3)**: It finds that CAPM requires simple `float` inputs (`beta`, `risk_free_rate`, etc.).
+8.  **Execution Plan**: The agent now has enough information to build a plan:
+    a. Fetch the raw float values for CAPM using the standard data-fetching tools (`tools/fa.py`, `tools/market.py`).
+    b. Call `tools.calculator.run_calculation()` with the `CAPM` model and its inputs to get the value for `r`.
+    c. Fetch other raw data needed for GGM (`D1`, `P0`).
+    d. Call `tools.calculator.run_calculation()` with the `GGM` model, passing a dictionary containing the calculated `r` and the other data to the `inputs` parameter to get the final result.
+9.  **Synthesize**: The agent presents the final result to the user, explaining the steps it took and the models/assumptions used.
 
 ## Other APIs
 - **Slack**: The primary user interface. The bot connects to Slack via **Socket Mode**, listening for direct messages and mentions.

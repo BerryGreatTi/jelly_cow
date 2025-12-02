@@ -168,8 +168,25 @@ def get_insider_transactions(ticker: str) -> Any:
     Returns:
         Any: Insider transactions data, usually a DataFrame.
     """
+
     stock = yf.Ticker(ticker)
     insider_transactions = stock.insider_transactions
     if insider_transactions is not None and not insider_transactions.empty:
         return replace_nan_with_none(insider_transactions.to_dict())
     return "No insider transactions found."
+
+def get_beta(ticker: str) -> float:
+    """
+    Retrieves the beta value for a given stock ticker.
+    Beta is a measure of a stock's volatility in relation to the overall market.
+
+    Args:
+        ticker (str): The stock ticker symbol.
+
+    Returns:
+        float: The beta value of the stock. Returns None if not available.
+    """
+
+    stock = yf.Ticker(ticker)
+    beta = stock.info.get("beta")
+    return replace_nan_with_none(beta)

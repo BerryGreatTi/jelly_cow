@@ -9,6 +9,7 @@ from agents.market_news_analyzer import agent as market_news_analyzer
 
 # Mid-level comprehensive analyzer agent
 from agents.single_asset_analyzer_agent import agent as single_asset_analyzer_agent
+from agents.financial_model_agent import financial_model_agent # New: Financial Model Agent
 
 # High-level workflow agents
 from agents.portfolio_analyzer_agent import agent as portfolio_analyzer_agent
@@ -66,6 +67,7 @@ agent = Agent(
         "- For a **portfolio analysis**, delegate to `PortfolioAnalyzer`.\n"
         "- For a **stock recommendation**, delegate to `Recommender`.\n"
         "- For a **comprehensive analysis of a single stock**, delegate to `SingleAssetAnalyzer`.\n"
+        "- For **calculations based on financial models (e.g., Cost of Equity, Implied Growth)**, delegate to `FinancialModelAgent`.\n"
         "- For specific **fundamental, technical, stock news, or market news analysis**, delegate to the respective specialist agents."
     ),
     tools=[
@@ -75,6 +77,7 @@ agent = Agent(
         
         # Mid-level comprehensive analyzer
         AgentTool(agent=single_asset_analyzer_agent),
+        AgentTool(agent=financial_model_agent),
         
         # Low-level specialist agents
         AgentTool(agent=fundamental_analyzer),

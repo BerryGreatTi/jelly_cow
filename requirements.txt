@@ -11,3 +11,4 @@ notion-client
 dotenv
 aiohttp
 requests
+pydantic
