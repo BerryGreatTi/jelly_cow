@@ -6,13 +6,14 @@ from tools.ta import (
     get_bbands,
     get_obv,
     get_stoch,
+    get_ohlcv_dict,
 )
 
 agent = Agent(
     name="TechnicalAnalyzer",
     model="gemini-2.5-flash",
 
-    description="Specialist of stock technical analysis.",
+    description="Specialist of stock technical analysis which is able to access recent OHLCV data and calculate MACD, RSI, Moving Averages, Bollinger Bands and OBV.",
     
     instruction=(
         "You are a specialist in technical analysis. Your tools provide recent historical data for key indicators as a list of values or dictionaries, ordered from oldest to newest. "
@@ -35,5 +36,6 @@ agent = Agent(
         get_bbands,
         get_obv,
         get_stoch,
+        get_ohlcv_dict,
     ],
 )

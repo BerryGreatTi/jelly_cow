@@ -5,6 +5,8 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+    volumes:
+      - ./.db:/app/db
 
   dev:
     build: .
@@ -13,4 +15,5 @@ services:
       - .env
     volumes:
       - .:/app
+      - ./.db:/app/db
     restart: unless-stopped

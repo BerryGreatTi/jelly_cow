@@ -14,22 +14,9 @@ APP_NAME = "JellyMonster"
 
 
 def get_session_service():
-    is_agent_session_db = bool(os.environ.get("IS_AGENT_SESSION_DB", 0))
-    db_path = os.environ.get("SESSION_DB_PATH", "agent_sessions.db")
-    if not is_agent_session_db:
-        db_path = ":memory:"
-    logger.debug(f"$IS_AGENT_SESSION_DB={is_agent_session_db}, session_db='{db_path}'")
-    
-    if is_agent_session_db:
-        dirname = os.path.dirname(db_path)
-        if dirname:
-            os.makedirs(dirname, exist_ok=True)
-        logger.info(f"Initializing database session service with '{db_path}'")
-        return DatabaseSessionService(db_url=f"sqlite:///./{db_path}")
-    
-    else:
-        logger.info("Initializing in-memory session service")
-        return InMemorySessionService()
+    db_path = "db/agent_sessions.db"
+    logger.info(f"Initializing database session service with '{db_path}'")
+    return DatabaseSessionService(db_url=f"sqlite:///./{db_path}")
     
 
 def get_runner(session_service):

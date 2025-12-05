@@ -21,6 +21,21 @@ def get_ohlcv(ticker: str, period: str = "4mo") -> DataFrame:
     return df
 
 
+def get_ohlcv_dict(ticker: str, limit: str = 30) -> DataFrame:
+    """
+    Get historical market data (OHLCV) for a given ticker.
+
+    Args:
+        ticker (str): The stock ticker symbol.
+        limit (int): The number of recent data points to return.
+
+    Returns:
+        list[dict]: A list of dictionaries containing the OHLCV value, ordered from oldest to newest.
+    """
+    df = get_ohlcv(ticker)
+    return df.tail(limit).to_dict("records")
+
+
 def get_rsi(ticker: str, length: int = 14, limit: int = 30):
     """
     Calculate the Relative Strength Index (RSI) for a given ticker for a recent period.
