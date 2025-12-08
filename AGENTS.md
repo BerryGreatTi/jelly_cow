@@ -212,6 +212,8 @@ The project uses Docker and Docker Compose to manage `development` and `producti
 
 - **`Dockerfile`**: Defines the Python 3.12 container for the application.
 - **`docker-compose.yml`**: Defines `prod` and `dev` services.
+    - **Database Persistence**: The agent's session history is stored in a SQLite database (`agent_sessions.db`). To persist this data across container restarts, a Docker **Named Volume** (`jelly_cow_db`) is used. This method is preferred over a host bind mount to prevent file permission issues between the host and container environments. The volume's name is explicitly defined in the `docker-compose.yml` to prevent Docker from prefixing it with the project name.
+    - **Schema Migrations**: If the `google-adk` library is updated, it may require a new database schema. This can cause a `no such column` error on startup. The simplest way to resolve this during development is to remove the old Docker volume (`docker-compose down -v`) and restart the application, which will create a new database with the correct schema.
 
 ### Development Workflow
 1.  **Start Development Environment**:
@@ -226,7 +228,11 @@ The project uses Docker and Docker Compose to manage `development` and `producti
     ```bash
     docker-compose down
     ```
-4.  **View Logs**:
+4.  **Stop and Remove Volumes**: Use this command to perform a clean restart, for example, after a database schema change.
+    ```bash
+    docker-compose down -v
+    ```
+5.  **View Logs**:
     ```bash
     docker-compose logs -f <service_name>
     ```

@@ -19,7 +19,7 @@ full_runner = get_runner(session_service)
 restricted_runner = get_restricted_runner(session_service)
 
 # Other settings
-max_text_length = 3000
+max_text_length = 2700
 logger = logging.getLogger("jm.slack.handler")
 
 

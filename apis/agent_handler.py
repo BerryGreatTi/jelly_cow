@@ -15,8 +15,9 @@ APP_NAME = "JellyMonster"
 
 def get_session_service():
     db_path = "db/agent_sessions.db"
+    # Ensure the directory exists
     logger.info(f"Initializing database session service with '{db_path}'")
-    return DatabaseSessionService(db_url=f"sqlite:///./{db_path}")
+    return DatabaseSessionService(db_url=f"sqlite+aiosqlite:///{db_path}")
     
 
 def get_runner(session_service):

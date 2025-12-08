@@ -12,3 +12,4 @@ dotenv
 aiohttp
 requests
 pydantic
+aiosqlite

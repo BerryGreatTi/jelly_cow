@@ -6,7 +6,7 @@ services:
       - .env
     restart: unless-stopped
     volumes:
-      - ./.db:/app/db
+      - jelly_cow_db:/app/db
 
   dev:
     build: .
@@ -15,5 +15,9 @@ services:
       - .env
     volumes:
       - .:/app
-      - ./.db:/app/db
+      - jelly_cow_db:/app/db
     restart: unless-stopped
+
+volumes:
+  jelly_cow_db:
+    name: jelly_cow_db
