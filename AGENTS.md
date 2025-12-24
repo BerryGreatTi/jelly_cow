@@ -29,9 +29,12 @@ The project follows a hierarchical, orchestrated agent structure. A `root_agent`
            |      |
            |      |--- (pre-processes) ---> [get_current_time_string]
            |      |
+           |      |--- (uses tools) ---> [get_advanced_financial_metrics, run_calculation(WACC)]
+           |      |
            |      L--- (delegates to) ---> [market_news_analyzer]
            |
            |--- [technical_analyzer]
+           |      L--- (uses tools) ---> [get_risk_metrics (Sharpe, Beta, MDD)]
            |
            L--- [stock_news_analyzer]
                   L--- (uses tools) ---> [get_company_news, load_web_page]
@@ -46,15 +49,22 @@ The project follows a hierarchical, orchestrated agent structure. A `root_agent`
 
 - `agents/recommender_agent.py`: A high-level agent that handles stock recommendation workflows. It uses `run_screener_query` and `get_technical_indicator` to find candidates, then calls the `single_asset_analyzer_agent` to perform in-depth analysis before making a final recommendation.
 
-- `agents/portfolio_analyzer_agent.py`: A high-level agent dedicated to analyzing a user's investment portfolio. It calls the `get_current_portfolio` tool (which implicitly receives the user's context) and then calls the `single_asset_analyzer_agent` for each asset to form a holistic rebalancing plan.
+- `agents/portfolio_analyzer_agent.py`: A high-level agent dedicated to analyzing a user's investment portfolio.
+    - It uses `get_portfolio_analysis` to calculate scientific metrics like **Correlation Matrix** and **HHI (Concentration Risk)**.
+    - It calls the `single_asset_analyzer_agent` for each asset to form a holistic rebalancing plan based on quantitative evidence.
 
 - `agents/single_asset_analyzer_agent.py`: A mid-level agent that performs a comprehensive analysis of a single stock. It encapsulates the process of calling the three low-level analyzers (`fundamental`, `technical`, `stock_news`) and synthesizing their findings into one report. This is a reusable component called by `recommender_agent` and `portfolio_analyzer_agent`.
 
 - `agents/ticker_lookup_agent.py`: A utility agent responsible for converting a company name (in English or Korean) into a valid `yfinance` stock ticker. It now exclusively uses `google_search` to find the company's primary exchange and combine the base symbol with the correct suffix (e.g., `.KS` for KOSPI, `.KQ` for KOSDAQ).
 
-- `agents/fundamental_analyzer.py`: A low-level specialist that performs deep fundamental analysis. It first calls `get_current_time_string` to determine the current date. Based on the date, it analyzes both **annual and the most recent quarterly** financial statements (`income_statement`, `balance_sheet`, `cash_flow`) to ensure a timely analysis. It also analyzes key metrics, analyst ratings, and insider transactions. It can delegate to the `MarketNewsAnalyzer` for qualitative, market-based research.
+- `agents/fundamental_analyzer.py`: A low-level specialist that performs deep fundamental analysis and valuation.
+    - **Advanced Metrics**: Calculates `ROIC`, `FCF`, `Altman Z-Score`, `Piotroski F-Score`, and `EV/EBITDA`.
+    - **Valuation Modeling**: Can calculate `WACC` using the Financial Calculation Framework to compare against ROIC (Value Creation vs. Destruction).
+    - It analyzes annual and quarterly financial statements to ensure timeliness and delegates to `MarketNewsAnalyzer` for qualitative research.
 
-- `agents/technical_analyzer.py`: A low-level specialist for technical analysis of a stock's price and volume data using tools from `tools/ta.py`.
+- `agents/technical_analyzer.py`: A low-level specialist for technical analysis and quantitative risk assessment.
+    - **Risk Metrics**: Calculates `Sharpe Ratio`, `Sortino Ratio`, `Beta`, `Annualized Volatility`, and `Max Drawdown (MDD)`.
+    - **Trend Analysis**: Uses standard indicators (RSI, MACD, MA, BB, OBV) but interprets them in the context of the calculated risk profile.
 
 - `agents/stock_news_analyzer.py`: A low-level specialist for stock-specific news analysis. It uses `get_company_news` to find recent articles and `load_web_page` to read their full content, analyzing them for sentiment and key events.
 
@@ -95,10 +105,15 @@ The agents rely on a set of specialized tools to gather information.
 
 - **`tools/fa.py`**: Contains tools based on `yfinance` for fetching fundamental data. Used by `FundamentalAnalyzer`.
     - Includes: `get_company_info`, `get_financial_summary`, `get_analyst_recommendations`, `get_major_shareholders`, `get_insider_transactions`.
+    - **Advanced Metrics**: `get_advanced_financial_metrics` (ROIC, FCF, Z-Score, F-Score, EV/EBITDA).
     - The financial statement tools (`get_income_statement`, `get_balance_sheet`, `get_cash_flow`) accept a `period` argument to fetch 'annual' or 'quarterly' data.
 
 - **`tools/ta.py`**: Contains tools based on `yfinance` and `pandas-ta` for technical analysis. Used by `TechnicalAnalyzer`.
     - Includes: `get_rsi`, `get_macd`, `get_moving_average`, `get_bbands`, `get_obv`, `get_stoch`.
+    - **Risk Metrics**: `get_risk_metrics` (Sharpe, Sortino, Beta, MDD, Volatility). Automatically handles benchmark selection (^GSPC vs ^KS11).
+
+- **`tools/portfolio_math.py`**: Contains tools for scientific portfolio analysis. Used by `PortfolioAnalyzerAgent`.
+    - `get_portfolio_analysis`: Calculates Correlation Matrix, HHI (Concentration), and Weights.
 
 - **`tools/na.py`**: Contains tools based on `yfinance` for fetching company-specific news articles. Used by `StockNewsAnalyzer`.
     - Includes: `get_company_news`.
@@ -122,13 +137,13 @@ The agents rely on a set of specialized tools to gather information.
 
 ## Financial Calculation Framework
 
-To support complex, theory-based financial calculations (e.g., Implied Growth, DCF valuation) in a scalable and maintainable way, the project uses a "Theory-Based Calculation Framework". This framework separates data-fetching, calculation logic, and agent orchestration into distinct components.
+To support complex, theory-based financial calculations (e.g., Implied Growth, DCF valuation, WACC) in a scalable and maintainable way, the project uses a "Theory-Based Calculation Framework". This framework separates data-fetching, calculation logic, and agent orchestration into distinct components.
 
 ### Core Principles
 
 -   **Separation of Concerns**:
     -   **Tools (`tools/`)**: Responsible only for fetching raw data (e.g., stock prices from `yfinance`, market data from the web). They contain no calculation logic.
-    -   **Models (`models/`)**: Contain the pure calculation logic based on specific financial theories (e.g., CAPM, GGM). They take data as input and produce a calculated value as output.
+    -   **Models (`models/`)**: Contain the pure calculation logic based on specific financial theories (e.g., CAPM, GGM, WACC). They take data as input and produce a calculated value as output.
     -   **Agents (`agents/`)**: Act as orchestrators. They decide which models to use, gather the necessary data by calling tools, and chain calculations together to reach a final conclusion.
 
 -   **Single Source of Truth (SSOT)**: All information about a financial model (its name, description, and required inputs) is defined within the model's class file itself. This prevents data duplication and ensures maintainability.
@@ -150,17 +165,20 @@ models/
 │   ├── __init__.py         # Intelligent registry for this concept
 │   ├── capm.py             # Example: CAPM model implementation
 │   └── ...
-└── implied_growth/         # 'Implied Growth' calculation models
+├── implied_growth/         # 'Implied Growth' calculation models
+│   ├── __init__.py
+│   ├── ggm.py              # Example: Gordon Growth Model implementation
+│   └── ...
+└── wacc/                   # 'WACC' calculation models
     ├── __init__.py
-    ├── ggm.py              # Example: Gordon Growth Model implementation
-    └── ...
+    └── wacc_model.py       # Weighted Average Cost of Capital implementation
 ```
 
 **2. Pydantic Schemas (`models/schemas.py`)**
 
 To ensure consistency and data validity, a Pydantic model (`ModelMetadata`) defines the structure for all model metadata.
 
-**3. Model Classes (`capm.py`, `ggm.py`, etc.)**
+**3. Model Classes (`capm.py`, `ggm.py`, `wacc_model.py`, etc.)**
 
 -   Each class represents a specific financial model.
 -   It contains the actual `calculate()` method (as an instance method).
